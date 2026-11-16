@@ -59,8 +59,10 @@ jobs:
       - name: Guard — no secrets committed
         run: |
           set -e
+          # --exclude-dir=.github: this very file contains the patterns it searches for,
+          # so scanning the workflows directory is a guaranteed false positive.
           if grep -rInE '(ghp_[A-Za-z0-9]{20,}|github_pat_|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' \
-               --exclude-dir=.git --exclude-dir=assets-src . ; then
+               --exclude-dir=.git --exclude-dir=.github . ; then
             echo "::error::credential-like string committed"; exit 1
           fi
           echo "no credentials detected ✓"
