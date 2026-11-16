@@ -38,7 +38,7 @@ Measured, not asserted — full evidence in [`docs/ai-dlc/05-verification.md`](d
 | Lighthouse desktop | **100** across all four |
 | Layout shift | **0** |
 | axe-core (WCAG 2.1 AA, both themes, desktop + mobile) | **0 violations** |
-| Functional checks (`tools/qa.py`) | **63 / 63** |
+| Functional checks (`tools/qa.py`) | **67 / 67** |
 | Third-party runtime requests | **zero** — fonts self-hosted and subsetted to 164 glyphs (107 KB) |
 
 ## Structure
@@ -55,7 +55,7 @@ assets/media/               hero.mp4 + hero.webm, 12 s silent loop, lazily attac
 assets-src/                 original 2022 media, untouched — provenance, not shipped
 tools/build-assets.py       reproducible image/video pipeline
 tools/build-fonts.py        reproducible font pipeline (+ --check coverage gate)
-tools/qa.py                 63-check verification sweep
+tools/qa.py                 67-check verification sweep
 docs/ai-dlc/                intent → content → design → technical → verification → operations
 ```
 

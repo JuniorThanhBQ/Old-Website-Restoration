@@ -84,7 +84,7 @@ behind it renders at RGB ≈ 8–13, the plate at 19–33, with a 75–88 edge h
 
 ## 4. Structural and content fidelity (`tools/qa.py`)
 
-63 checks, all passing. Coverage:
+67 checks, all passing. Coverage:
 
 - **Content** — all 100+ normative Vietnamese strings from
   `02-content-inventory.md` present, diacritics intact.
@@ -101,6 +101,8 @@ behind it renders at RGB ≈ 8–13, the plate at 19–33, with a 75–88 edge h
   theme switches both ways with `aria-pressed`, mobile menu opens/closes.
 - **Responsive** — no horizontal overflow at 320 / 375 / 768 / 1024 / 1440 / 1920 px.
 - **Reduced motion** — no video sources attached, all revealed content visible.
+- **No JavaScript** — desktop header nav still visible and usable, all ten FAQ answers
+  readable, footer nav present as the mobile fallback, hero renders from its poster.
 - **Security posture** — exactly one `<script>` tag and it has `src`; CSP meta present;
   no root-absolute `src`; no inline scripts.
 
@@ -170,3 +172,6 @@ rewriting it would be editing the artefact rather than restoring it.
   require response headers, which Pages does not allow.
 - The hero video is attached by JS only. With JavaScript disabled the poster remains,
   which is a complete design, not a degraded one.
+- With JavaScript disabled the mobile nav button is gone, so mobile users get the footer
+  navigation instead of the header sheet. The desktop nav is deliberately *not* hidden in
+  the `<noscript>` block, because it is plain links that need no scripting.

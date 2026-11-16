@@ -515,7 +515,11 @@
   <style>
     .faq-item__panel[hidden]{display:block}
     .faq-item__icon{display:none}
-    .theme-switch,.menu-toggle,.nav{display:none}
+    /* .nav is deliberately NOT hidden: on desktop it is plain links that need no
+       JS. On mobile it is already display:none via CSS, where the footer nav is
+       the fallback — hiding it globally would strip navigation from desktop
+       users whose JS failed to load. */
+    .theme-switch,.menu-toggle{display:none}
     .reveal{opacity:1;transform:none}
     .hero__badge,.marquee{display:none}
   </style>

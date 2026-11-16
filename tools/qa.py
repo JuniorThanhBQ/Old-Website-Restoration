@@ -271,6 +271,22 @@ def run():
         rp.screenshot(path=str(OUT / "reduced-motion.png"), full_page=True)
         rm.close()
 
+        # ── no JavaScript: the page must still be complete ──
+        nj = browser.new_context(viewport={"width": 1440, "height": 900},
+                                 java_script_enabled=False, locale="vi-VN")
+        np = nj.new_page()
+        np.goto(BASE, wait_until="load")
+        np.wait_for_timeout(300)
+        check(np.locator(".nav a").first.is_visible(),
+              "no-JS: desktop header nav still usable (it needs no scripting)")
+        check(np.locator(".faq-item__panel").first.is_visible(),
+              "no-JS: FAQ answers are readable without the accordion")
+        check(np.locator(".site-footer nav a").count() >= 5,
+              "no-JS: footer navigation present as a fallback")
+        check(np.locator(".hero__title").is_visible(),
+              "no-JS: hero renders (poster, not video)")
+        nj.close()
+
         # ── per-section screenshots for design review ──
         ctx2 = browser.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
         p2 = ctx2.new_page()
