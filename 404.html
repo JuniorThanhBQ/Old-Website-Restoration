@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi" dir="ltr" data-theme="now">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Không tìm thấy trang — Junior Thành</title>
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./assets/css/fonts.css">
+<link rel="stylesheet" href="./assets/css/style.css">
+<style>
+  .nf { min-height: 100svh; display: grid; place-items: center; padding: var(--gutter); }
+  .nf__inner { width: min(100%, 40rem); display: grid; gap: var(--sp-4);
+    border-inline-start: 2px solid var(--accent);
+    padding-inline-start: clamp(1.25rem, 4vw, 2.5rem); }
+  .nf__code { font-family: var(--font-mono); font-size: var(--step--1);
+    letter-spacing: .24em; text-transform: uppercase; color: var(--accent); }
+  .nf__title { font-family: var(--font-display); font-size: var(--step-4);
+    line-height: 1.02; font-variation-settings: "opsz" 144, "SOFT" 24, "WONK" 1; }
+  .nf__body { color: var(--ink-soft); max-width: 42ch; }
+  .nf__links { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-block-start: var(--sp-2); }
+  .nf__links a { display: inline-block; padding: .4rem 1rem; border: 1px solid var(--rule-strong);
+    border-radius: var(--r-pill); font-family: var(--font-mono); font-size: .7rem;
+    letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--ink); }
+  .nf__links a:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); opacity: 1; }
+</style>
+</head>
+<body>
+<main class="nf">
+  <div class="nf__inner">
+    <p class="nf__code">Lỗi 404</p>
+    <h1 class="nf__title">Không tìm thấy trang</h1>
+    <p class="nf__body">Trang bạn tìm có thể đã được chuyển hoặc chưa từng tồn tại. Nhưng mọi thứ khác vẫn ở đây, đúng như ngày nó được viết ra.</p>
+    <nav class="nf__links" aria-label="Điều hướng thay thế">
+      <a href="./">Về trang chủ</a>
+      <a href="./#gioi-thieu">Giới thiệu</a>
+      <a href="./#nghiep-vu">Nghiệp vụ</a>
+      <a href="./#faq">FAQ</a>
+    </nav>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""Build self-hosted, glyph-subsetted webfonts.
+
+Why subset: the page's copy is normative and frozen (docs/ai-dlc/02-content-inventory.md)
+and uses only ~140 distinct characters. Shipping whole latin + Vietnamese faces costs
+~180 KB for glyphs that can never appear, and the extra paint work lands directly on the
+LCP text block under mobile CPU throttling.
+
+Google Fonts subsets server-side via `&text=`, which conveniently also merges the
+disjoint latin/vietnamese faces into one file (merging them locally with fontTools
+fails on variable fonts). We request exactly the characters the page needs, verify
+coverage with fontTools, then write our own @font-face block so no third-party
+request happens at runtime.
+
+Usage:
+  python3 tools/build-fonts.py           # rebuild assets/fonts/*.woff2 and css
+  python3 tools/build-fonts.py --check   # verify coverage only (no network); used by CI
+"""
+import pathlib
+import re
+import sys
+import urllib.parse
+import urllib.request
+
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+FONTS = pathlib.Path("assets/fonts")
+CSS = pathlib.Path("assets/css/fonts.css")
+
+# (google family:query, css font-family, fallback weight range, filename slug)
+FAMILIES = [
+    ("Fraunces:opsz,wght@9..144,300..700", "Fraunces", "300 700", "fraunces"),
+    ("Inter:wght@300..700", "Inter", "300 700", "inter"),
+    ("JetBrains+Mono:wght@400..600", "JetBrains Mono", "400 600", "jetbrains-mono"),
+]
+
+# Present at runtime but not in the static HTML: clock digits, year, AM/PM, separators.
+RUNTIME_EXTRA = "0123456789: /APM"
+PRINTABLE_ASCII = "".join(chr(c) for c in range(0x20, 0x7F))
+
+
+def required_chars() -> set[str]:
+    """Every character that can render, derived from the shipped HTML."""
+    html = "\n".join(
+        pathlib.Path(p).read_text(encoding="utf-8")
+        for p in ("index.html", "404.html") if pathlib.Path(p).exists()
+    )
+    stripped = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", html, flags=re.S)
+    stripped = re.sub(r"<[^>]+>", " ", stripped)
+    stripped += " " + " ".join(
+        re.findall(r'(?:alt|title|aria-label|content)="([^"]*)"', html))
+    return {c for c in (set(stripped) | set(PRINTABLE_ASCII) | set(RUNTIME_EXTRA))
+            if c.isprintable()}
+
+
+def fetch(url: str, binary: bool = False):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=90) as r:
+        return r.read() if binary else r.read().decode()
+
+
+def build_face(query: str, chars: set[str]) -> tuple[bytes, str]:
+    """Return (woff2 bytes, css font-weight) for one family, subset to `chars`."""
+    text = urllib.parse.quote("".join(sorted(chars)), safe="")
+    url = f"https://fonts.googleapis.com/css2?family={query}&text={text}&display=swap"
+    css = fetch(url)
+    m = re.search(r"src:\s*url\((https://[^)]+)\)", css)
+    if not m:
+        raise SystemExit(f"no subset face returned for {query.split(':')[0]}")
+    face = re.search(r"@font-face\s*\{[^}]*\}", css).group(0)
+    weight = re.search(r"font-weight:\s*([^;]+);", face).group(1).strip()
+    return fetch(m.group(1), binary=True), weight
+
+
+def shrink(data: bytes, chars: set[str]) -> bytes:
+    """Second pass: cut the server-subsetted face down to exactly `chars`.
+
+    Google's `text=` response still carries composite glyphs and extra coverage
+    (a ~66 KB face for a ~30 KB need). Subsetting locally afterwards is safe now
+    because the latin and vietnamese faces have already been merged into one file.
+    """
+    from fontTools import subset as ftsubset
+    import tempfile
+
+    opts = ftsubset.Options()
+    opts.flavor = "woff2"
+    opts.layout_features = ["*"]
+    opts.name_IDs = ["*"]
+    opts.notdef_outline = True
+    opts.desubroutinize = True
+    opts.recalc_bounds = True
+
+    with tempfile.TemporaryDirectory() as tmp:
+        src = pathlib.Path(tmp) / "in.woff2"
+        out = pathlib.Path(tmp) / "out.woff2"
+        src.write_bytes(data)
+        font = ftsubset.load_font(str(src), opts)
+        sub = ftsubset.Subsetter(options=opts)
+        sub.populate(unicodes=[ord(c) for c in sorted(chars)])
+        sub.subset(font)
+        ftsubset.save_font(font, str(out), opts)
+        return out.read_bytes()
+
+
+def verify(chars: set[str]) -> list[str]:
+    """Report required characters missing from any shipped font."""
+    from fontTools.ttLib import TTFont
+    problems = []
+    for _, css_family, _, slug in FAMILIES:
+        path = FONTS / f"{slug}.woff2"
+        if not path.exists():
+            problems.append(f"{css_family}: file missing ({path})")
+            continue
+        cmap = set(TTFont(str(path)).getBestCmap())
+        gaps = [c for c in sorted(chars) if ord(c) not in cmap]
+        if gaps:
+            problems.append(f"{css_family}: missing {''.join(gaps)!r}")
+    return problems
+
+
+def write_css(weights: dict[str, str]) -> None:
+    lines = [
+        "/* Self-hosted webfonts, subsetted to the glyphs this site actually uses.",
+        "   Generated by tools/build-fonts.py — do not edit by hand.",
+        "   Fraunces, Inter, JetBrains Mono — SIL Open Font License 1.1. */",
+        "",
+    ]
+    for _, css_family, fallback, slug in FAMILIES:
+        lines += [
+            "@font-face {",
+            f"  font-family: '{css_family}';",
+            "  font-style: normal;",
+            f"  font-weight: {weights.get(css_family, fallback)};",
+            "  font-display: swap;",
+            f"  src: url('../fonts/{slug}.woff2') format('woff2');",
+            "}",
+            "",
+        ]
+    CSS.parent.mkdir(parents=True, exist_ok=True)
+    CSS.write_text("\n".join(lines), encoding="utf-8")
+
+
+def main() -> int:
+    chars = required_chars()
+    print(f"required characters: {len(chars)}")
+
+    if "--check" in sys.argv:
+        problems = verify(chars)
+        for p in problems:
+            print("  ✗", p)
+        if problems:
+            print("✗ font coverage incomplete — run tools/build-fonts.py")
+            return 1
+        print("✓ coverage OK")
+        return 0
+
+    FONTS.mkdir(parents=True, exist_ok=True)
+    weights = {}
+    for query, css_family, _, slug in FAMILIES:
+        raw, weight = build_face(query, chars)
+        data = shrink(raw, chars)
+        (FONTS / f"{slug}.woff2").write_bytes(data)
+        weights[css_family] = weight
+        print(f"  {css_family:16} {len(data) / 1024:6.1f} KB "
+              f"(was {len(raw) / 1024:.0f} KB, weight {weight})")
+    write_css(weights)
+
+    problems = verify(chars)
+    if problems:
+        for p in problems:
+            print("  ✗", p)
+        return 1
+    total = sum(p.stat().st_size for p in FONTS.glob("*.woff2"))
+    print(f"✓ {len(chars)} glyphs covered, {total / 1024:.0f} KB total")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
