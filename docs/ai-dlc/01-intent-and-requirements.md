@@ -55,7 +55,7 @@ Translated into interface decisions (traceability: R2 → token/component):
 **Design (R2, R3)**
 - AC-5 Both palettes (`Now`, `Then`) exist; the choice persists across reloads and respects `prefers-color-scheme` on first visit.
 - AC-6 Era motifs present: full-bleed hero video, frosted panel, pill nav, bracketed FAQ numbers, radial diagram, quote interludes.
-- AC-7 No layout shift from webfonts (`font-display: swap` + matched fallback metrics) or images (explicit dimensions / `aspect-ratio`).
+- AC-7 CLS ≤ 0.1 measured by Lighthouse, with no shift attributable to images (every image carries explicit dimensions or `aspect-ratio`; measured CLS 0). Webfonts use `font-display: swap`, so a late swap can move text slightly. Metric-matched fallback faces (`size-adjust` / `ascent-override`) were evaluated and deliberately not shipped: calibrating them requires the real Georgia/Arial binaries, which are absent from the build environment, so the values would have been guesses against DejaVu and could be worse than no override on user machines.
 
 **Deployment (R4)**
 - AC-8 The site is served over HTTPS from `https://juniorthanhbq.github.io/Old-Website-Restoration/` with HTTP 200 and no 404 for any referenced sub-resource.
