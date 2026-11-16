@@ -163,6 +163,20 @@ The 2022 site's own outbound link to `thanh09junior.github.io/BookShop360_ThanhA
 is deliberately left untouched even though it 404s today — it is historical content, and
 rewriting it would be editing the artefact rather than restoring it.
 
+### Verified against the live deployment, not just locally
+
+| Check | Result |
+|---|---|
+| Lighthouse mobile, production URL | perf **97** · a11y **100** · BP **100** · SEO **100**; LCP 2.1 s, CLS 0, 219 KiB |
+| axe-core on production, both themes × desktop/mobile | **0 violations**, 42 rules passing |
+| Theme switch live | bg `#F4F0E8` → `#0B0C0E`, `data-theme` set, choice persisted, survives reload |
+| Clock | ticks (`06:20:30 PM` → `06:20:32 PM`) |
+| FAQ | expands/collapses with `aria-expanded` and `hidden` in sync |
+| Hero video | source attached and playing after load |
+| Active nav | `aria-current` applied on scroll |
+| Unknown path | returns **404** with the custom page |
+| Console + network errors during normal browsing | **none** |
+
 ## 9. Known limitations
 
 - GitHub Pages serves the site at `/Old-Website-Restoration/`, so `og:image` and
