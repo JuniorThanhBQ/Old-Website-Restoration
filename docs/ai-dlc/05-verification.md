@@ -169,7 +169,8 @@ rewriting it would be editing the artefact rather than restoring it.
 
 | Check | Result |
 |---|---|
-| Lighthouse mobile, production URL | perf **97** · a11y **100** · BP **100** · SEO **100**; LCP 2.1 s, CLS 0, 219 KiB |
+| Lighthouse mobile, production URL | perf **98–100** · a11y **100** · BP **100** · SEO **100**; LCP 1.8–2.3 s, CLS 0, ~220 KiB |
+| Lighthouse desktop, production URL | **100 / 100 / 100 / 100**; FCP 0.4 s, LCP 0.5 s, TBT 0 ms |
 | axe-core on production, both themes × desktop/mobile | **0 violations**, 42 rules passing |
 | Theme switch live | bg `#F4F0E8` → `#0B0C0E`, `data-theme` set, choice persisted, survives reload |
 | Clock | ticks (`06:20:30 PM` → `06:20:32 PM`) |
@@ -181,6 +182,11 @@ rewriting it would be editing the artefact rather than restoring it.
 | Transfer budget (first load, video excluded) | **254 KiB** of a 1229 KiB limit |
 | Third-party requests on load | **0** |
 | Horizontal scroll at 320/375/414/768/1024/1280/1440/1920 px | none — `scrollWidth == clientWidth` at every width |
+
+Mobile performance is reported as a range because it varies with CDN and network
+conditions: three consecutive runs gave 98, 98 and 100, and one cold run gave 93 with
+FCP == LCP, which is first-connection latency rather than a page defect. All runs stay
+inside AC-10 (≥ 90, LCP ≤ 2.5 s, CLS ≤ 0.1).
 
 One defect was found by auditing the criteria rather than by testing: at 320 px the header
 needed 307 px inside a 283 px content box, so the menu button hung 5 px past the clipped
