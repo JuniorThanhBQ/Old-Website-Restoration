@@ -80,6 +80,10 @@ jobs:
           test "$bytes" -lt 12000000 || { echo "::error::artefact too large"; exit 1; }
 
       - uses: actions/configure-pages@v5
+        with:
+          # Bootstraps the Pages site with build_type=workflow when it does not exist
+          # yet, so a fresh repository does not need a manual Settings toggle.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
