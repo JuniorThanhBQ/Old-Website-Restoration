@@ -58,7 +58,7 @@ Translated into interface decisions (traceability: R2 → token/component):
 - AC-7 No layout shift from webfonts (`font-display: swap` + matched fallback metrics) or images (explicit dimensions / `aspect-ratio`).
 
 **Deployment (R4)**
-- AC-8 The site is served over HTTPS from `https://thanh09junior.github.io/Old-Website-Restoration/` with HTTP 200 and no 404 for any referenced sub-resource.
+- AC-8 The site is served over HTTPS from `https://juniorthanhbq.github.io/Old-Website-Restoration/` with HTTP 200 and no 404 for any referenced sub-resource.
 - AC-9 All asset URLs resolve correctly under the `/Old-Website-Restoration/` base path (no root-absolute traps).
 
 **Performance (R5)**

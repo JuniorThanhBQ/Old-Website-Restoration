@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://thanh09junior.github.io/Old-Website-Restoration/sitemap.xml
+Sitemap: https://juniorthanhbq.github.io/Old-Website-Restoration/sitemap.xml

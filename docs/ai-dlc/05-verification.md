@@ -141,7 +141,27 @@ blocks reproduced verbatim**.
 | D6 | Media re-encoded | 7.2 MB / 4 min → 293 KB / 12 s silent loop; originals kept in `assets-src/`. |
 | D7 | Fonts subsetted to 164 glyphs | 180 KB of unused coverage → 107 KB; guarantees the LCP text renders sooner. Coverage is CI-enforced by `build-fonts.py --check`. |
 
-## 8. Known limitations
+## 8. Deployment
+
+Live at **https://juniorthanhbq.github.io/Old-Website-Restoration/** — HTTP 200, and
+`index.html`, CSS, JS, fonts, hero poster, `robots.txt`, `sitemap.xml` and `404.html` all
+return 200 from the CDN (asserted by the workflow's `smoke` job).
+
+Two things were only discoverable by actually deploying, and both are now fixed:
+
+1. **The Pages host is the account that owns the repo** (`juniorthanhbq.github.io`), not
+   the display handle (`thanh09junior`). Canonical, `og:url`, `og:image`,
+   `twitter:image`, `sitemap.xml` and `robots.txt` all pointed at the wrong subdomain,
+   which would have produced a canonical that 404s.
+2. **`configure-pages` needs `enablement: true`** on a repository where Pages was never
+   switched on. Without it the job dies at `Get Pages site failed ... Not Found` and the
+   deploy never runs.
+
+The 2022 site's own outbound link to `thanh09junior.github.io/BookShop360_ThanhAndPhong/`
+is deliberately left untouched even though it 404s today — it is historical content, and
+rewriting it would be editing the artefact rather than restoring it.
+
+## 9. Known limitations
 
 - GitHub Pages serves the site at `/Old-Website-Restoration/`, so `og:image` and
   `canonical` are hard-coded to that absolute URL. If the repo is renamed or a custom

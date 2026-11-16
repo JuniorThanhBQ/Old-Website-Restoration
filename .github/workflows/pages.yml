@@ -110,13 +110,22 @@ jobs:
           PAGE_URL: ${{ needs.deploy.outputs.page_url }}
         run: |
           set -e
-          url="${PAGE_URL:-https://thanh09junior.github.io/Old-Website-Restoration/}"
+          url="${PAGE_URL:-https://juniorthanhbq.github.io/Old-Website-Restoration/}"
           echo "smoke testing $url"
-          code=$(curl -s -o /dev/null -w '%{http_code}' "$url")
+          # The CDN can serve the previous deployment for a minute or so after
+          # deploy-pages reports success, so poll before declaring failure.
+          code=000
+          for attempt in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$url")
+            [ "$code" = "200" ] && break
+            echo "  attempt $attempt: $code — waiting for Pages to publish"
+            sleep 10
+          done
           echo "index status: $code"
           test "$code" = "200" || { echo "::error::index returned $code"; exit 1; }
           for p in assets/css/style.css assets/css/fonts.css assets/js/main.js \
-                   assets/img/hero-poster.webp robots.txt 404.html; do
+                   assets/fonts/fraunces.woff2 assets/fonts/inter.woff2 \
+                   assets/img/hero-poster.webp robots.txt sitemap.xml 404.html; do
             c=$(curl -s -o /dev/null -w '%{http_code}' "${url}${p}")
             echo "  $p -> $c"
             test "$c" = "200" || { echo "::error::$p returned $c"; exit 1; }
