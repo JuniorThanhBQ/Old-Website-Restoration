@@ -1254,6 +1254,16 @@
 
   @media (max-width: 23rem) {
     .ikigai__node { font-size: 0.58rem; padding: 0.4rem 0.62rem; letter-spacing: 0.06em; }
+    /* At 320px the wordmark + theme switch + menu button need 307px inside a 283px
+       content box, so the menu button hung 5px past the clipped edge. Tighten the
+       wordmark and the switch rather than dropping either control. */
+    .site-header__inner { gap: var(--sp-2); }
+    .wordmark { gap: var(--sp-2); }
+    .wordmark__text { font-size: 0.9rem; }
+    .theme-switch { padding: 1px; }
+    .theme-switch__btn { padding-inline: 0.42rem; font-size: 0.72rem; }
+    .menu-toggle { width: 2.4rem; height: 2.1rem; }
+    .header-tools { gap: 0.4rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

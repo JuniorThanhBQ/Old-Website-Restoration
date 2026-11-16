@@ -38,7 +38,7 @@ Measured, not asserted — full evidence in [`docs/ai-dlc/05-verification.md`](d
 | Lighthouse desktop | **100** across all four |
 | Layout shift | **0** |
 | axe-core (WCAG 2.1 AA, both themes, desktop + mobile) | **0 violations** |
-| Functional checks (`tools/qa.py`) | **67 / 67** |
+| Functional checks (`tools/qa.py`) | **73 / 73** |
 | Third-party runtime requests | **zero** — fonts self-hosted and subsetted to 164 glyphs (107 KB) |
 
 ## Structure

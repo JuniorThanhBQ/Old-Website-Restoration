@@ -287,6 +287,30 @@ def run():
               "no-JS: hero renders (poster, not video)")
         nj.close()
 
+        # ── narrowest supported width: header controls must stay inside ──
+        for w in (320, 360, 375):
+            nc = browser.new_context(viewport={"width": w, "height": 800}, locale="vi-VN")
+            wp = nc.new_page()
+            wp.goto(BASE, wait_until="networkidle")
+            wp.wait_for_timeout(400)
+            over = wp.evaluate(
+                """(vw) => {
+                  const right = (s) => {
+                    const e = document.querySelector(s);
+                    return e ? Math.round(e.getBoundingClientRect().right) : 0;
+                  };
+                  return { vw,
+                           menu: right('.menu-toggle'),
+                           tools: right('.header-tools'),
+                           scroll: document.documentElement.scrollWidth,
+                           client: document.documentElement.clientWidth };
+                }""", w)
+            check(over["menu"] <= w and over["tools"] <= w,
+                  f"{w}px: header controls inside viewport (menu {over['menu']}, tools {over['tools']} <= {w})")
+            check(over["scroll"] <= over["client"] + 1,
+                  f"{w}px: no horizontal scroll ({over['scroll']} vs {over['client']})")
+            nc.close()
+
         # ── per-section screenshots for design review ──
         ctx2 = browser.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
         p2 = ctx2.new_page()

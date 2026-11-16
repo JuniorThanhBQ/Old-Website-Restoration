@@ -84,7 +84,7 @@ behind it renders at RGB ≈ 8–13, the plate at 19–33, with a 75–88 edge h
 
 ## 4. Structural and content fidelity (`tools/qa.py`)
 
-67 checks, all passing. Coverage:
+73 checks, all passing. Coverage:
 
 - **Content** — all 100+ normative Vietnamese strings from
   `02-content-inventory.md` present, diacritics intact.
@@ -103,6 +103,8 @@ behind it renders at RGB ≈ 8–13, the plate at 19–33, with a 75–88 edge h
 - **Reduced motion** — no video sources attached, all revealed content visible.
 - **No JavaScript** — desktop header nav still visible and usable, all ten FAQ answers
   readable, footer nav present as the mobile fallback, hero renders from its poster.
+- **Narrow widths** — at 320/360/375 px the wordmark, theme switch and menu button all
+  sit inside the viewport and no horizontal scroll is possible.
 - **Security posture** — exactly one `<script>` tag and it has `src`; CSP meta present;
   no root-absolute `src`; no inline scripts.
 
@@ -176,6 +178,15 @@ rewriting it would be editing the artefact rather than restoring it.
 | Active nav | `aria-current` applied on scroll |
 | Unknown path | returns **404** with the custom page |
 | Console + network errors during normal browsing | **none** |
+| Transfer budget (first load, video excluded) | **254 KiB** of a 1229 KiB limit |
+| Third-party requests on load | **0** |
+| Horizontal scroll at 320/375/414/768/1024/1280/1440/1920 px | none — `scrollWidth == clientWidth` at every width |
+
+One defect was found by auditing the criteria rather than by testing: at 320 px the header
+needed 307 px inside a 283 px content box, so the menu button hung 5 px past the clipped
+edge and part of it could not be tapped. A `max-width: 23rem` block now tightens the
+wordmark, theme switch and gaps; the button ends at 302 px and the regression is covered by
+six new assertions.
 
 ## 9. Known limitations
 

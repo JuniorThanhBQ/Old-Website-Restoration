@@ -50,7 +50,7 @@ are subset deliberately.
 ## Verify
 
 ```bash
-python3 tools/qa.py               # 67 checks; non-zero exit on failure
+python3 tools/qa.py               # 73 checks; non-zero exit on failure
 ```
 
 Local QA needs Playwright once: `pip install playwright && python3 -m playwright install chromium`.
