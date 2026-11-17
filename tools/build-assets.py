@@ -20,11 +20,9 @@ def ffmpeg():
         return "ffmpeg"
 
 
-# ---------------------------------------------------------------- portrait
 def portrait():
     src = Image.open(SRC / "me1.webp").convert("RGB")
     w, h = src.size
-    # 3:4 crop centred on the horizontal middle, anchored slightly above centre
     target = 3 / 4
     new_w, new_h = (w, int(w / target)) if w / h > target else (int(h * target), h)
     left, top = (w - new_w) // 2, max(0, int((h - new_h) * 0.42))
@@ -34,12 +32,10 @@ def portrait():
         img = cropped.resize((width, int(width / target)), Image.LANCZOS)
         img.save(IMG / f"portrait-{width}.webp", "WEBP", quality=82, method=6)
         img.save(IMG / f"portrait-{width}.avif", "AVIF", quality=55)
-    # LQIP placeholder (inline as a data URI in CSS)
     tiny = cropped.resize((24, 32), Image.LANCZOS)
     tiny.save(IMG / "portrait-lqip.webp", "WEBP", quality=40)
 
 
-# ---------------------------------------------------------------- hero poster
 def poster():
     exe = ffmpeg()
     for t, name in (("6", "hero-poster.webp"),):
@@ -55,7 +51,6 @@ def poster():
     (IMG / "_poster.png").unlink()
 
 
-# ---------------------------------------------------------------- music
 def music():
     """The 2022 player's two songs, re-encoded for streaming. Provenance stays
     in assets-src/song.mp3 + song2.mp3; these are the shipped derivatives."""
@@ -67,10 +62,8 @@ def music():
             check=True, capture_output=True)
 
 
-# ---------------------------------------------------------------- hero video
 def hero_video():
     exe = ffmpeg()
-    # 12 s seamless-ish loop taken from a quiet stretch, no audio, faststart
     base = [exe, "-ss", "3", "-t", "12", "-i", str(SRC / "train.mp4"),
             "-an", "-vf", "scale=1280:-2:flags=lanczos", "-r", "25",
             "-movflags", "+faststart"]
@@ -82,14 +75,11 @@ def hero_video():
                    check=True, capture_output=True)
 
 
-# ---------------------------------------------------------------- icons
 def icons():
     """The 2022 favicon, restored. assets-src/icon.png is byte-identical to the
     original site's /icon.png, so every size is cut straight from it — no
     redrawn replacement, which is what the owner asked for."""
     src = Image.open(SRC / "icon.png").convert("RGBA")
-    # 16/32 px are already tiny, so keep them pixel-faithful; the two manifest
-    # sizes are palette-quantised, which is what keeps them under 15 KB
     (src.resize((32, 32), Image.LANCZOS).save(IMG / "favicon-32.png", "PNG", optimize=True))
     for size, name in ((192, "icon-192.png"), (512, "icon-512.png")):
         (src.resize((size, size), Image.LANCZOS)
@@ -97,13 +87,11 @@ def icons():
             .save(IMG / name, "PNG", optimize=True))
     src.resize((16, 16), Image.LANCZOS).save(IMG / "favicon-16.png", "PNG", optimize=True)
 
-    # apple-touch-icon is composited on the icon's own background: iOS ignores alpha
     plate = Image.new("RGBA", src.size, (21, 23, 23, 255))
     plate.alpha_composite(src)
     plate.convert("RGB").resize((180, 180), Image.LANCZOS).save(
         IMG / "apple-touch-icon.png", "PNG", optimize=True)
 
-    # the multi-size .ico browsers and crawlers prefer over a single PNG
     src.resize((256, 256), Image.LANCZOS).save(
         OUT / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
 
@@ -115,7 +103,6 @@ def logo():
     src.save(IMG / "ou-logo.webp", "WEBP", quality=88, method=6)
 
 
-# ---------------------------------------------------------------- og card
 def og():
     W, H = 1200, 630
     im = Image.new("RGB", (W, H), "#F4F0E8")

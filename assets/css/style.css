@@ -1,14 +1,8 @@
-/* ============================================================
-   Junior Thành — "As It Was"
-   Two rooms, one house.  Now (bone) ⟷ Then (2022 amber glass)
-   ============================================================ */
 
 @layer reset, tokens, base, layout, components, utilities;
 
-/* ─────────────────────────────────────────────── tokens ── */
 @layer tokens {
   :root {
-    /* type */
     --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
     --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -21,23 +15,19 @@
     --step-4: clamp(2rem, 1.35rem + 3.2vw, 3.6rem);
     --step-5: clamp(2.6rem, 1.35rem + 6vw, 6rem);
 
-    /* space */
     --sp-1: 0.25rem; --sp-2: 0.5rem;  --sp-3: 0.75rem; --sp-4: 1rem;
     --sp-5: 1.5rem;  --sp-6: 2rem;    --sp-7: 3rem;    --sp-8: 4rem;
     --sp-9: 6rem;    --sp-10: 8rem;   --sp-11: 12rem;
 
-    /* shape */
     --r-sm: 2px; --r-md: 4px; --r-lg: 6px; --r-pill: 999px;
     --shell: 76rem;
     --gutter: clamp(1.15rem, 4vw, 4rem);
     --measure: 68ch;
 
-    /* motion */
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
     --dur: 260ms;
   }
 
-  /* ── Now: warm bone, ink, signal red ── */
   :root,
   [data-theme="now"] {
     --canvas: #F4F0E8;
@@ -61,7 +51,6 @@
     --theme-color: #F4F0E8;
   }
 
-  /* ── Then: the 2022 room ── */
   [data-theme="then"] {
     --canvas: #0B0C0E;
     --canvas-deep: #141619;
@@ -85,7 +74,6 @@
   }
 }
 
-/* ──────────────────────────────────────────────── reset ── */
 @layer reset {
   *, *::before, *::after { box-sizing: border-box; }
   * { margin: 0; }
@@ -100,7 +88,6 @@
   h1, h2, h3, h4 { font-weight: 400; line-height: 1.06; letter-spacing: -0.018em; }
 }
 
-/* ───────────────────────────────────────────────── base ── */
 @layer base {
   body {
     background: var(--canvas);
@@ -166,7 +153,6 @@
   }
 }
 
-/* ─────────────────────────────────────────────── layout ── */
 @layer layout {
   .shell {
     width: 100%;
@@ -238,10 +224,8 @@
   }
 }
 
-/* ─────────────────────────────────────────── components ── */
 @layer components {
 
-  /* ── scroll progress ── */
   .scroll-progress {
     position: fixed;
     inset-block-start: 0;
@@ -259,7 +243,6 @@
     transition: width 90ms linear;
   }
 
-  /* ── header ── */
   .site-header {
     position: fixed;
     inset-block-start: 0;
@@ -281,8 +264,6 @@
     transition: opacity var(--dur) var(--ease);
   }
   .site-header:not(.is-stuck) {
-    /* a dark shelf: legible over any frame of the hero video, and a true
-       background colour for contrast calculation rather than a borrowed one */
     background: linear-gradient(180deg, rgba(6, 7, 9, 0.78) 0%, rgba(6, 7, 9, 0.46) 62%, rgba(6, 7, 9, 0) 100%);
   }
   .site-header.is-stuck {
@@ -409,7 +390,6 @@
     color: var(--accent-ink);
   }
 
-  /* ── music toggle (the 2022 header had one; it streams song.mp3/song2.mp3) ── */
   .music-toggle {
     position: relative;
     display: grid;
@@ -492,10 +472,6 @@
     line-height: 1.9;
   }
 
-  /* ── hero ──
-   Composition follows the 2022 front page: full-bleed video, an indented name
-   block, a hairline across the full width, then four columns hanging from it.
-   What is new is the type scale, the grid and the two-palette system. */
   .hero {
     position: relative;
     display: flex;
@@ -544,8 +520,6 @@
     opacity: 0.5;
   }
 
-  /* the prototype runs this block nearly edge to edge — the hairline and the
-     four columns span the viewport, not the narrower reading shell */
   .hero__layout {
     width: 100%;
     padding-inline: var(--gutter);
@@ -553,8 +527,6 @@
     gap: clamp(1.5rem, 3.2vw, 2.75rem);
   }
 
-  /* indented under the wordmark, where 2022 put it: the name block starts a
-     quarter of the way across, so the column row can run under it */
   .hero__name {
     display: grid;
     gap: var(--sp-2);
@@ -649,9 +621,6 @@
     min-width: 8.6ch;
   }
 
-  /* the 2022 fact lists: a serif label over its value, hairline between entries
-     — same weight as the headings in the other columns, so all four columns of
-     the row read in parallel, as they did in the prototype */
   .facts { display: grid; gap: 0; }
   .facts__row {
     display: grid;
@@ -674,7 +643,6 @@
     color: rgba(255, 255, 255, 0.82);
   }
 
-  /* ── about ── */
   .about { background: var(--canvas); }
 
   .about__grid {
@@ -685,8 +653,6 @@
   }
 
   .about__prose { display: grid; gap: var(--sp-4); max-width: var(--measure); }
-  /* --measure is a ch-based ceiling, but at 768px the single-column layout would
-     otherwise stretch prose to ~87 characters per line */
   @media (max-width: 62rem) {
     .about__prose { max-width: min(100%, 34rem); }
     .interlude__quote p, .goals__quotes, .site-footer__closing { max-width: 34rem; }
@@ -757,7 +723,6 @@
     border-inline-start: 1px solid var(--accent);
   }
 
-  /* ── interlude ── */
   .interlude {
     background: var(--canvas-deep);
     color: var(--ink);
@@ -788,7 +753,6 @@
     color: var(--accent);
   }
 
-  /* ── roles ── */
   .roles__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
@@ -831,7 +795,6 @@
   }
   .role-card a { font-weight: 500; }
 
-  /* ── goals / ikigai ── */
   .goals { background: var(--canvas); overflow: hidden; }
 
   .ikigai {
@@ -851,7 +814,6 @@
     border: 1px solid var(--rule);
   }
   .ikigai__ring--2 { width: 76%; height: 76%; border-color: var(--rule-strong); }
-  /* the rotating-stage motif, still turning in the goals diagram */
   @keyframes spin { to { transform: rotate(360deg); } }
   .ikigai__ring--spin {
     width: 88%;
@@ -932,7 +894,6 @@
     margin-inline: auto;
   }
 
-  /* ── faq ── */
   .faq { background: var(--canvas-deep); border-block-start: 1px solid var(--rule); }
 
   .faq__grid {
@@ -1062,7 +1023,6 @@
   }
   .chip:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); opacity: 1; }
 
-  /* ── footer ── */
   .site-footer {
     background: var(--canvas-ink);
     color: #F2EFE9;
@@ -1105,8 +1065,6 @@
 
   .site-footer__grid {
     display: grid;
-    /* four columns on wide screens, two on tablet — never an orphaned 4th item
-       on its own row (auto-fit produced 3 tracks and a dangling card at 768px) */
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--sp-6) var(--sp-5);
     padding-block-end: clamp(2rem, 4vw, 3rem);
@@ -1131,7 +1089,6 @@
   .footer-links a:hover { color: #FFB43A; border-block-end-color: rgba(255, 180, 58, 0.5); opacity: 1; }
 
   .site-footer__col--brand { gap: var(--sp-4); }
-  /* a normal cell, not span-2: four items on two tracks fills 2+2 with no gap */
   @media (max-width: 26rem) { .site-footer__col--brand { grid-column: span 2; } }
   .site-footer__logo {
     width: 100%;
@@ -1160,7 +1117,6 @@
   .site-footer__credit a { color: #FFB43A; text-decoration: none; }
   .site-footer__credit a:hover { text-decoration: underline; }
 
-  /* ── reveal-on-scroll ── */
   .reveal { opacity: 0; transform: translateY(14px); transition: opacity 520ms var(--ease), transform 520ms var(--ease); }
   .reveal.is-in { opacity: 1; transform: none; }
   .reveal[data-delay="1"] { transition-delay: 70ms; }
@@ -1168,7 +1124,6 @@
   .reveal[data-delay="3"] { transition-delay: 210ms; }
 }
 
-/* ──────────────────────────────────────────── utilities ── */
 @layer utilities {
   @media (max-width: 62rem) {
     .nav { display: none; }
@@ -1193,15 +1148,11 @@
   }
 
   @media (max-width: 30rem) {
-    /* one column on a phone: the protoype's four-up row would be ~80px wide each */
     .hero__columns { grid-template-columns: 1fr; gap: var(--sp-4); }
   }
 
   @media (max-width: 23rem) {
     .ikigai__node { font-size: 0.58rem; padding: 0.4rem 0.62rem; letter-spacing: 0.06em; }
-    /* At 320px the wordmark + music + theme switch + menu button need 307px inside
-       a 283px content box, so the menu button hung 5px past the clipped edge.
-       Tighten the controls rather than dropping any of them. */
     .site-header__inner { gap: var(--sp-2); }
     .wordmark { gap: var(--sp-2); }
     .wordmark__text { font-size: 0.9rem; }

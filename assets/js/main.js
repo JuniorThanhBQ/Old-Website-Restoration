@@ -1,12 +1,9 @@
-/* Junior Thành — progressive enhancement only.
-   Every feature below degrades to a fully working, readable page. */
 (function () {
   "use strict";
 
   var root = document.documentElement;
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  /* ── theme ─────────────────────────────────────────────── */
   var THEME_KEY = "jth-theme";
   var themeButtons = Array.prototype.slice.call(
     document.querySelectorAll("[data-set-theme]")
@@ -25,7 +22,6 @@
     try {
       window.localStorage.setItem(key, value);
     } catch (err) {
-      /* private mode / quota — ignore */
     }
   }
 
@@ -51,7 +47,6 @@
     });
   });
 
-  /* ── clock ─────────────────────────────────────────────── */
   var clocks = [
     { el: document.getElementById("hero-clock"), time: true },
     { el: document.getElementById("footer-clock"), time: true }
@@ -87,13 +82,11 @@
     window.setInterval(tick, 1000);
   }
 
-  /* ── year ──────────────────────────────────────────────── */
   var yearEl = document.getElementById("year");
   if (yearEl) {
     yearEl.textContent = String(new Date().getFullYear());
   }
 
-  /* ── mobile menu ───────────────────────────────────────── */
   var menuToggle = document.getElementById("menu-toggle");
   var mobileMenu = document.getElementById("mobile-menu");
 
@@ -123,7 +116,6 @@
       menuToggle.focus();
     });
 
-    /* focus containment while the sheet is open */
     mobileMenu.addEventListener("keydown", function (event) {
       if (event.key !== "Tab") {
         return;
@@ -150,7 +142,6 @@
     });
   }
 
-  /* ── header stuck state ────────────────────────────────── */
   var header = document.getElementById("site-header");
   if (header) {
     var updateHeader = function () {
@@ -160,7 +151,6 @@
     window.addEventListener("scroll", updateHeader, { passive: true });
   }
 
-  /* ── scroll progress ───────────────────────────────────── */
   var progressBar = document.getElementById("scroll-progress-bar");
   if (progressBar) {
     var updateProgress = function () {
@@ -173,7 +163,6 @@
     window.addEventListener("resize", updateProgress);
   }
 
-  /* ── active nav ────────────────────────────────────────── */
   var navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav__link"));
   var sections = navLinks
     .map(function (link) {
@@ -206,7 +195,6 @@
     sections.forEach(function (section) { navObserver.observe(section); });
   }
 
-  /* ── reveal on scroll ──────────────────────────────────── */
   var revealTargets = Array.prototype.slice.call(
     document.querySelectorAll(
       ".section-head, .about__prose > *, .quote-card, .portrait, .role-card, " +
@@ -235,7 +223,6 @@
     revealTargets.forEach(function (el) { el.classList.add("is-in"); });
   }
 
-  /* ── FAQ accordion ─────────────────────────────────────── */
   var triggers = Array.prototype.slice.call(document.querySelectorAll(".faq-item__trigger"));
 
   triggers.forEach(function (trigger) {
@@ -259,7 +246,6 @@
     });
   });
 
-  /* ── hero video (lazy, motion- and data-aware) ─────────── */
   var video = document.getElementById("hero-video");
   var connection = navigator.connection || {};
   var saveData = connection.saveData === true;
@@ -288,18 +274,10 @@
     var play = video.play();
     if (play && typeof play.catch === "function") {
       play.catch(function () {
-        /* autoplay blocked: the poster is the design, nothing to fix */
       });
     }
   }
 
-  /* ── music player (the 2022 header button) ──────────────────
-     Two tracks in sequence, like the original (song.mp3 → song2.mp3).
-     Intent drives the UI, not `paused`: play() is async, so toggling off the
-     media flag alone lets a fast double-click read "still paused" twice and
-     start the track twice. Nothing is fetched until the first press — each
-     src is attached when its track is about to play, so visitors who never
-     press play, and those who only hear track one, pay for no audio. */
   var musicBtn = document.getElementById("music-toggle");
   var tracks = [
     document.getElementById("music-a"),
@@ -350,8 +328,6 @@
       }
     }
 
-    /* one place that reads the real state, so a late `playing` or `pause`
-       event can never leave the button saying the opposite of the audio */
     function sync() {
       setPressed(wantPlaying || anyPlaying());
       syncTitle();
@@ -367,13 +343,10 @@
       var mine = ++attempt;
       wantPlaying = true;
       ensureSrc(el);
-      /* pause siblings first; their pause events are harmless because sync()
-         only demotes the button once nothing is playing and intent is off */
       tracks.forEach(function (other) { if (other !== el) other.pause(); });
       var started = el.play();
       if (started && typeof started.catch === "function") {
         started.catch(function () {
-          /* a superseded attempt must not clear the state of a newer one */
           if (mine !== attempt) return;
           wantPlaying = false;
           sync();
@@ -384,7 +357,7 @@
 
     function stop() {
       wantPlaying = false;
-      attempt++;                    /* invalidate any in-flight play() */
+      attempt++;
       tracks.forEach(function (el) { el.pause(); });
       sync();
     }
@@ -393,7 +366,7 @@
       el.addEventListener("playing", sync);
       el.addEventListener("pause", sync);
       el.addEventListener("ended", function () {
-        if (!wantPlaying) return;   /* the visitor already stopped us */
+        if (!wantPlaying) return;
         trackIndex = (i + 1) % tracks.length;
         start();
       });

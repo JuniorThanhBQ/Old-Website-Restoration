@@ -27,14 +27,12 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 FONTS = pathlib.Path("assets/fonts")
 CSS = pathlib.Path("assets/css/fonts.css")
 
-# (google family:query, css font-family, fallback weight range, filename slug)
 FAMILIES = [
     ("Fraunces:opsz,wght@9..144,300..700", "Fraunces", "300 700", "fraunces"),
     ("Inter:wght@300..700", "Inter", "300 700", "inter"),
     ("JetBrains+Mono:wght@400..600", "JetBrains Mono", "400 600", "jetbrains-mono"),
 ]
 
-# Present at runtime but not in the static HTML: clock digits, year, AM/PM, separators.
 RUNTIME_EXTRA = "0123456789: /APM"
 PRINTABLE_ASCII = "".join(chr(c) for c in range(0x20, 0x7F))
 

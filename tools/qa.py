@@ -20,22 +20,20 @@ def check(cond, msg):
     return cond
 
 
-# Quotes and attribution must be byte-faithful to the 2022 source, not "improved".
 FIDELITY = [
-    '"Gió đẩy chiều nào thì ta theo chiều đó.',        # straight quote, not "
+    '"Gió đẩy chiều nào thì ta theo chiều đó.',
     'điều chân quý nhất rồi."',
     '"Chúng ta có thể không thay đổi được quá khứ.',
     '"Khi nghiệp vụ không chỉ nằm ở sự chuyên nghiệp',
     '"Mục tiêu cá nhân là thứ gì đó có thể thúc đẩy',
     '"Học, học nữa, học mãi.',
     '"Nếu không có mục tiêu thì hãy có động lực.',
-    '- Junior Thành -',                                # not em-dashes
-    'HTML,CSS, JavaScript',                            # original spacing quirk
-    'cuộc sống .Còn lại mọi quyết định',               # original spacing quirk
-    'trong thời gian rảnh .',                          # original spacing quirk
+    '- Junior Thành -',
+    'HTML,CSS, JavaScript',
+    'cuộc sống .Còn lại mọi quyết định',
+    'trong thời gian rảnh .',
 ]
 
-# Every normative string from docs/ai-dlc/02-content-inventory.md that must appear.
 REQUIRED = [
     "Junior Thành", "Văn Trung Thành - K23", "HCMC-OU",
     "Sinh viên năm hai tại trường đại học Mở TP.HCM", "Thời gian làm việc: 9h30-23h",
@@ -118,7 +116,6 @@ def run():
         errs = [c for c in console if c[0] == "error"]
         check(not errs, f"no console errors ({errs[:5]})")
 
-        # ── structure ──
         for sid in ["trang-chu", "gioi-thieu", "nghiep-vu", "muc-tieu", "faq"]:
             check(page.locator(f"#{sid}").count() == 1, f"section #{sid} exists")
         for aid in ["about", "role", "goal", "FAQ"]:
@@ -129,8 +126,6 @@ def run():
         check(page.locator("footer.site-footer").count() == 1, "one site footer")
         check(page.locator('html[lang="vi"]').count() == 1, "lang=vi")
 
-        # ── content ──
-        # read raw DOM text (unaffected by text-transform) plus the DOM alt/labels
         text = page.evaluate("document.body.textContent || ''")
         flat = re.sub(r"\s+", " ", text)
         missing = [s for s in REQUIRED if re.sub(r"\s+", " ", s) not in flat]
@@ -141,7 +136,6 @@ def run():
         check("\u201c" not in text and "\u201d" not in text,
               "no smart quotes substituted for the original straight quotes")
 
-        # ── FAQ ──
         check(page.locator(".faq-item__trigger").count() == 10, "10 FAQ triggers")
         first = page.locator(".faq-item__trigger").first
         check(first.get_attribute("aria-expanded") == "false", "FAQ starts closed")
@@ -155,7 +149,6 @@ def run():
         page.wait_for_timeout(150)
         check(first.get_attribute("aria-expanded") == "false", "Escape closes FAQ")
 
-        # ── theme ──
         html_el = page.locator("html")
         page.click('[data-set-theme="then"]')
         page.wait_for_timeout(350)
@@ -169,7 +162,6 @@ def run():
         page.wait_for_timeout(350)
         check(html_el.get_attribute("data-theme") == "now", "theme switches back to now")
 
-        # ── external links ──
         hrefs = page.eval_on_selector_all("a[href]", "els => els.map(e => e.href)")
         for url in EXTERNAL_LINKS:
             check(any(h.rstrip("/") == url.rstrip("/") for h in hrefs), f"link preserved: {url}")
@@ -178,7 +170,6 @@ def run():
             "els => els.filter(e => !(e.rel||'').includes('noopener')).map(e => e.href)")
         check(not unsafe, f"all _blank links have noopener ({unsafe[:3]})")
 
-        # ── images ──
         no_dim = page.eval_on_selector_all(
             "img", "els => els.filter(e => !e.getAttribute('width') || !e.getAttribute('height')).map(e => e.src)")
         check(not no_dim, f"all images have width/height ({no_dim[:3]})")
@@ -188,15 +179,12 @@ def run():
         alts = page.eval_on_selector_all("img", "els => els.map(e => e.getAttribute('alt'))")
         check(all(a is not None for a in alts), "every img has an alt attribute")
 
-        # ── clock ──
         clock = page.locator("#hero-clock").inner_text()
         check(bool(re.match(r"\d{2}:\d{2}:\d{2} (AM|PM)$", clock)), f"hero clock formatted ({clock})")
 
-        # ── video lazily attached ──
         srcs = page.eval_on_selector("#hero-video", "v => Array.from(v.querySelectorAll('source')).map(s=>s.src)")
         check(len(srcs) >= 1, f"hero video sources attached ({len(srcs)})")
 
-        # ── every referenced local asset actually resolves ──
         import urllib.parse
         refs = page.eval_on_selector_all(
             "link[href], script[src], img[src], source[src], source[srcset], video[data-src], video[data-src-webm]",
@@ -214,7 +202,6 @@ def run():
                        page.request.get(r).status >= 400]
         check(not broken_refs, f"every local asset reference resolves (broken: {broken_refs[:5]})")
 
-        # ── security posture ──
         html_src = page.content()
         check(html_src.count("<script") == 1, "exactly one script tag")
         check('Content-Security-Policy' in html_src, "CSP meta present")
@@ -222,20 +209,17 @@ def run():
         no_inline = page.eval_on_selector_all("script", "els => els.filter(e=>!e.src).length")
         check(no_inline == 0, "no inline scripts")
 
-        # ── desktop screenshot ──
         page.evaluate("window.scrollTo(0,0)")
         page.wait_for_timeout(400)
         page.screenshot(path=str(OUT / "now-desktop.png"), full_page=True)
         page.screenshot(path=str(OUT / "now-hero.png"))
 
-        # ── responsive ──
         for w, h in [(320, 700), (375, 812), (768, 1024), (1024, 768), (1440, 900), (1920, 1080)]:
             page.set_viewport_size({"width": w, "height": h})
             page.wait_for_timeout(250)
             sw = page.evaluate("document.documentElement.scrollWidth")
             check(sw <= w, f"no horizontal overflow at {w}px (scrollWidth={sw})")
 
-        # ── mobile menu ──
         page.set_viewport_size({"width": 375, "height": 812})
         page.wait_for_timeout(250)
         page.evaluate("window.scrollTo(0,0)")
@@ -258,7 +242,6 @@ def run():
         page.evaluate("window.scrollTo(0,0)")
         page.screenshot(path=str(OUT / "then-mobile.png"), full_page=True)
 
-        # ── favicon: the 2022 icon, not a redrawn mark ──
         page.set_viewport_size({"width": 1440, "height": 900})
         page.evaluate("window.scrollTo(0,0)")
         page.wait_for_timeout(200)
@@ -284,8 +267,6 @@ def run():
               f"favicon: every declared icon resolves ({len(served)} fetched)")
         check(all(s["size"] > 100 for s in served), "favicon: icons are non-empty files")
         check(any(s["type"] == "image/png" for s in served), "favicon: a PNG icon is served")
-        # a 32px favicon cut from the 2022 artwork is mostly amber-on-transparent;
-        # a redrawn dark plate would read as opaque. Sample its alpha coverage.
         cov = page.evaluate(
             """async (url) => {
               const img = new Image();
@@ -310,7 +291,6 @@ def run():
         check(cov["opaquePct"] < 0.95,
               f"favicon: transparent background kept, not an opaque plate ({cov['opaquePct']*100:.0f}% opaque)")
 
-        # ── music player: present, inert until pressed, then two chained tracks ──
         mt = page.locator("#music-toggle")
         check(mt.is_visible(), "music: header play button is visible")
         check(mt.get_attribute("aria-pressed") == "false",
@@ -357,9 +337,6 @@ def run():
               "music: document.title restored on pause")
         page.screenshot(path=str(OUT / "music-paused.png"), clip={"x": 0, "y": 0, "width": 1440, "height": 120})
 
-        # chaining and wrap — the 2022 player played song.mp3 then song2.mp3.
-        # Seeking to the end is the only practical way to reach `ended` in a
-        # test, and it is exactly the code path the chain runs through.
         page.click("#music-toggle")
         page.wait_for_function("() => !document.getElementById('music-a').paused", timeout=5000)
         page.evaluate("""() => { const a = document.getElementById('music-a');
@@ -382,7 +359,6 @@ def run():
         page.click("#music-toggle")
         page.wait_for_timeout(400)
 
-        # rapid toggling must not leave aria-pressed claiming the opposite
         page.click("#music-toggle"); page.click("#music-toggle"); page.click("#music-toggle")
         page.wait_for_timeout(1200)
         consistent = page.evaluate(
@@ -394,7 +370,6 @@ def run():
             page.click("#music-toggle")
         page.wait_for_timeout(400)
 
-        # ── hero composition: the 2022 prototype's shape, not the frosted plate ──
         check(page.locator(".hero__plate").count() == 0,
               "hero: frosted plate removed")
         check(page.locator(".hero__badge").count() == 0,
@@ -455,7 +430,6 @@ def run():
         check(page.locator(".hero .facts").count() == 2,
               "hero: both fact lists kept (3 rows each)")
 
-        # ── reduced motion ──
         rm = browser.new_context(viewport={"width": 1280, "height": 900},
                                  reduced_motion="reduce")
         rp = rm.new_page()
@@ -468,7 +442,6 @@ def run():
         rp.screenshot(path=str(OUT / "reduced-motion.png"), full_page=True)
         rm.close()
 
-        # ── no JavaScript: the page must still be complete ──
         nj = browser.new_context(viewport={"width": 1440, "height": 900},
                                  java_script_enabled=False, locale="vi-VN")
         np = nj.new_page()
@@ -484,7 +457,6 @@ def run():
               "no-JS: hero renders (poster, not video)")
         nj.close()
 
-        # ── narrowest supported width: header controls must stay inside ──
         for w in (320, 360, 375):
             nc = browser.new_context(viewport={"width": w, "height": 800}, locale="vi-VN")
             wp = nc.new_page()
@@ -508,7 +480,6 @@ def run():
                   f"{w}px: no horizontal scroll ({over['scroll']} vs {over['client']})")
             nc.close()
 
-        # ── per-section screenshots for design review ──
         ctx2 = browser.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
         p2 = ctx2.new_page()
         p2.goto(BASE, wait_until="networkidle")
