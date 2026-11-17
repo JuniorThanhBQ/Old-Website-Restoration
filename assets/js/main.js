@@ -5,6 +5,7 @@
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   var THEME_KEY = "jth-theme";
+  var syncRoom = null;
   var themeButtons = Array.prototype.slice.call(
     document.querySelectorAll("[data-set-theme]")
   );
@@ -31,7 +32,10 @@
       btn.setAttribute("aria-pressed", String(btn.dataset.setTheme === theme));
     });
     if (themeColorMeta) {
-      themeColorMeta.setAttribute("content", theme === "then" ? "#0B0C0E" : "#F4F0E8");
+      themeColorMeta.setAttribute("content", theme === "then" ? "#0B0C0E" : "#EEF3F7");
+    }
+    if (typeof syncRoom === "function") {
+      syncRoom();
     }
   }
 
@@ -85,6 +89,30 @@
   var yearEl = document.getElementById("year");
   if (yearEl) {
     yearEl.textContent = String(new Date().getFullYear());
+  }
+
+  var capsuleDate = document.getElementById("capsule-date");
+  if (capsuleDate) {
+    try {
+      var firstSeen = readStored("jth-first-seen");
+      var firstDate = firstSeen ? new Date(firstSeen) : null;
+      if (!firstDate || isNaN(firstDate.getTime())) {
+        firstDate = new Date();
+        store("jth-first-seen", firstDate.toISOString());
+      }
+      if (!isNaN(firstDate.getTime())) {
+        capsuleDate.textContent = firstDate.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+        var capsule = document.getElementById("capsule");
+        if (capsule) {
+          capsule.removeAttribute("hidden");
+        }
+      }
+    } catch (err) {
+    }
   }
 
   var menuToggle = document.getElementById("menu-toggle");
@@ -279,19 +307,33 @@
   }
 
   var musicBtn = document.getElementById("music-toggle");
-  var tracks = [
-    document.getElementById("music-a"),
-    document.getElementById("music-b")
-  ].filter(Boolean);
+  var tracks = {
+    now: document.getElementById("music-now"),
+    then: document.getElementById("music-then")
+  };
 
-  if (musicBtn && tracks.length) {
+  if (musicBtn && tracks.now && tracks.then) {
     var pageTitle = document.title;
-    var trackIndex = 0;
-    var titleTimer = null;
     var wantPlaying = false;
     var attempt = 0;
+    var activeKey = null;
+    var titleTimer = null;
+    var eqFrame = null;
+    var eqTimer = null;
+    var contexts = {};
+    var sources = {};
+    var analysers = {};
 
-    tracks.forEach(function (el) { el.volume = 0.42; });
+    var liner = document.getElementById("liner");
+    var linerSong = document.getElementById("liner-song");
+    var linerArtist = document.getElementById("liner-artist");
+    var bars = Array.prototype.slice.call(
+      liner ? liner.querySelectorAll(".liner__eq i") : []
+    );
+    var analyserOff = {};
+
+    tracks.now.volume = 0.42;
+    tracks.then.volume = 0.42;
 
     function pad2(n) { return String(n).padStart(2, "0"); }
     function stamp(secs) {
@@ -299,25 +341,140 @@
       return Math.floor(secs / 60) + ":" + pad2(Math.floor(secs % 60));
     }
 
-    function current() { return tracks[trackIndex]; }
-    function anyPlaying() {
-      return tracks.some(function (el) { return !el.paused && !el.ended; });
+    function keyOf(el) {
+      return el === tracks.now ? "now" : el === tracks.then ? "then" : null;
     }
 
     function ensureSrc(el) {
       if (!el.getAttribute("src") && el.dataset.src) el.src = el.dataset.src;
     }
 
-    function paintTitle() {
-      var el = current();
-      document.title = stamp(el.currentTime) + " / " + stamp(el.duration);
+    function currentKey() {
+      var theme = root.getAttribute("data-theme");
+      return theme === "then" ? "then" : "now";
+    }
+
+    function current() {
+      return tracks[currentKey()];
+    }
+
+    function playingKey() {
+      var keys = ["now", "then"];
+      for (var i = 0; i < keys.length; i++) {
+        var el = tracks[keys[i]];
+        if (el && !el.paused && !el.ended) return keys[i];
+      }
+      return null;
+    }
+
+    function setPressed(on) {
+      musicBtn.setAttribute("aria-pressed", String(on));
+      musicBtn.setAttribute("aria-label", on ? "Tắt nhạc nền" : "Bật nhạc nền");
+    }
+
+    function ensureAnalyser(key) {
+      var el = tracks[key];
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!el || !Ctx || contexts[key] || analyserOff[key]) return;
+      try {
+        var ctx = new Ctx();
+        var src = ctx.createMediaElementSource(el);
+        var analyser = ctx.createAnalyser();
+        src.connect(analyser);
+        analyser.connect(ctx.destination);
+        contexts[key] = ctx;
+        sources[key] = src;
+        analysers[key] = analyser;
+      } catch (err) {
+        analyserOff[key] = true;
+      }
+    }
+
+    function stopLoops() {
+      if (eqFrame !== null) {
+        window.cancelAnimationFrame(eqFrame);
+        eqFrame = null;
+      }
+      if (eqTimer !== null) {
+        window.clearInterval(eqTimer);
+        eqTimer = null;
+      }
+    }
+
+    function updateBars(key, tick) {
+      var analyser = key ? analysers[key] : null;
+      var data = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
+      if (analyser) analyser.getByteFrequencyData(data);
+      bars.forEach(function (bar, i) {
+        var level;
+        if (analyser) {
+          var at = Math.floor((i / bars.length) * data.length * 0.55);
+          level = 0.08 + 0.92 * Math.min(1, (data[at] / 255) * 1.7);
+        } else {
+          level = 0.08 + 0.92 * (0.3 + 0.5 * Math.abs(Math.sin(tick + i * 0.7)));
+        }
+        bar.style.setProperty("--level", level.toFixed(2));
+      });
+    }
+
+    function runEq() {
+      if (!bars.length || !wantPlaying) return;
+      if (reduceMotion.matches) {
+        bars.forEach(function (bar, i) {
+          bar.style.setProperty("--level", (0.12 + 0.75 * (0.2 + 0.16 * i)).toFixed(2));
+        });
+        return;
+      }
+      var tick = 0;
+      var key = playingKey();
+      if (key && analysers[key]) {
+        var loop = function () {
+          if (!wantPlaying) return;
+          updateBars(key, tick);
+          tick++;
+          eqFrame = window.requestAnimationFrame(loop);
+        };
+        eqFrame = window.requestAnimationFrame(loop);
+      } else {
+        eqTimer = window.setInterval(function () {
+          if (!wantPlaying) return;
+          tick++;
+          updateBars(null, tick);
+        }, 120);
+      }
+    }
+
+    function syncLiner() {
+      if (!liner) return;
+      var key = playingKey();
+      if (wantPlaying && key) {
+        if (liner.hidden || linerSong.textContent !== tracks[key].dataset.title) {
+          linerSong.textContent = tracks[key].dataset.title || "";
+          linerArtist.textContent = tracks[key].dataset.artist || "";
+        }
+        liner.hidden = false;
+      } else {
+        liner.hidden = true;
+      }
     }
 
     function syncTitle() {
-      if (anyPlaying()) {
-        paintTitle();
+      var key = playingKey();
+      if (key) {
+        var el = tracks[key];
+        document.title = stamp(el.currentTime) + " / " + stamp(el.duration);
         if (titleTimer === null) {
-          titleTimer = window.setInterval(paintTitle, 1000);
+          titleTimer = window.setInterval(function () {
+            var live = playingKey();
+            if (live === null) {
+              window.clearInterval(titleTimer);
+              titleTimer = null;
+              document.title = pageTitle;
+              return;
+            }
+            var track = tracks[live];
+            document.title = stamp(track.currentTime) + " / " + stamp(track.duration);
+          }, 1000);
         }
       } else {
         if (titleTimer !== null) {
@@ -329,21 +486,48 @@
     }
 
     function sync() {
-      setPressed(wantPlaying || anyPlaying());
+      setPressed(wantPlaying || playingKey() !== null);
       syncTitle();
+      syncLiner();
+      stopLoops();
+      if (wantPlaying) runEq();
     }
 
-    function setPressed(on) {
-      musicBtn.setAttribute("aria-pressed", String(on));
-      musicBtn.setAttribute("aria-label", on ? "Tắt nhạc nền" : "Bật nhạc nền");
-    }
+    syncRoom = function () {
+      var key = currentKey();
+      if (key === activeKey) return;
+      var outgoing = activeKey;
+      activeKey = key;
+      if (outgoing !== null) {
+        var prev = tracks[outgoing];
+        if (prev) prev.pause();
+      }
+      if (!wantPlaying) return;
+      var next = tracks[key];
+      if (!next) return;
+      var mine = ++attempt;
+      ensureSrc(next);
+      var started = next.play();
+      if (started && typeof started.catch === "function") {
+        started.catch(function () {
+          if (mine !== attempt) return;
+          wantPlaying = false;
+          sync();
+        });
+      }
+      ensureAnalyser(key);
+      sync();
+    };
 
     function start() {
       var el = current();
+      if (!el) return;
       var mine = ++attempt;
       wantPlaying = true;
+      activeKey = keyOf(el) || currentKey();
       ensureSrc(el);
-      tracks.forEach(function (other) { if (other !== el) other.pause(); });
+      var other = tracks[activeKey === "now" ? "then" : "now"];
+      if (other) other.pause();
       var started = el.play();
       if (started && typeof started.catch === "function") {
         started.catch(function () {
@@ -352,28 +536,35 @@
           sync();
         });
       }
+      ensureAnalyser(activeKey);
       sync();
     }
 
     function stop() {
       wantPlaying = false;
       attempt++;
-      tracks.forEach(function (el) { el.pause(); });
+      tracks.now.pause();
+      tracks.then.pause();
       sync();
     }
 
-    tracks.forEach(function (el, i) {
-      el.addEventListener("playing", sync);
-      el.addEventListener("pause", sync);
-      el.addEventListener("ended", function () {
-        if (!wantPlaying) return;
-        trackIndex = (i + 1) % tracks.length;
-        start();
-      });
+    ["now", "then"].forEach(function (key) {
+      tracks[key].addEventListener("pause", sync);
+      tracks[key].addEventListener("playing", sync);
     });
+
+    // capture phase: the menu's own Escape listener runs on bubble and closes the sheet
+    // first, so this handler must read the menu's state before it is mutated
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape" || !liner || liner.hidden) return;
+      if (!mobileMenu.hidden) return;
+      liner.hidden = true;
+    }, true);
 
     musicBtn.addEventListener("click", function () {
       if (wantPlaying) stop(); else start();
     });
+
+    activeKey = currentKey();
   }
 })();

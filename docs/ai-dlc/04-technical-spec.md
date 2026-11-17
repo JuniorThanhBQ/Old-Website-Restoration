@@ -28,7 +28,8 @@
 │   ├── fonts/                 # 3 glyph-subsetted woff2 (107 KB total)
 │   ├── img/                   # portrait (3 widths × avif/webp), poster, favicons, logo, og
 │   └── media/hero.mp4 + .webm # re-encoded, lazily attached
-│   └── media/as-it-was-1.mp3  # the original two songs, 96 kbps, opt-in playback
+│   └── media/as-it-was.mp3    # Then room soundtrack, 96 kbps, opt-in playback
+│   └── media/everything-i-wanted.mp3  # Now room soundtrack, 96 kbps, opt-in playback
 ├── assets-src/                # original untouched media (provenance, not shipped)
 ├── tools/build-assets.py      # reproducible image/video pipeline
 ├── tools/build-fonts.py       # reproducible font pipeline (+ --check coverage gate)
@@ -51,7 +52,8 @@
 | `img/og.png` | 1200×630 social card composed from tokens (Pillow) |
 | `media/hero.mp4` | `train.mp4` cut to a 12 s silent loop, 1280×720, `+faststart` → **293 KB** |
 | `media/hero.webm` | VP9 sibling, served first via `<source>` → ~300 KB |
-| `media/as-it-was-{1,2}.mp3` | the original `song.mp3`/`song2.mp3`, metadata stripped, 96 kbps stereo, 44.1 kHz → 6.0 MB for both |
+| `media/as-it-was.mp3` | the owner's `song.mp3`, metadata stripped, 96 kbps stereo, 44.1 kHz — scores the **Then** room |
+| `media/everything-i-wanted.mp3` | the owner's `song2.mp3`, same treatment — scores the **Now** room |
 
 Every output must keep the visual content of the source (no re-cropping of the portrait's subject).
 
@@ -94,6 +96,9 @@ Vanilla, one IIFE, strict mode, ≤ ~150 lines, all features degrade to a workin
 8. **Year** — replace `#year` text with current year.
 9. **Header state** — add `.is-stuck` past 80px.
 10. **Video** — if `matchMedia('(prefers-reduced-motion: reduce)').matches` is false and `navigator.connection.saveData !== true` and viewport ≥ 480px, append/play the `<video>` (source is `data-src`), else keep poster.
+11. **Room soundtrack** — two `<audio>` elements, `#music-now` and `#music-then`, `preload="none"` + `loop`, source in `data-src`. State is one intent flag plus one "active room" key derived from `<html data-theme>`. Press → start the active room's track; room switch → pause the outgoing element and play the incoming one, which resumes at its own `currentTime` because the element is never re-sourced; press again → pause both. Volume fixed at 0.42; `document.title` shows `elapsed / total` only while playing; a failed `play()` promise resets the intent flag rather than leaving a pressed button over silence.
+12. **Liner HUD** — visible iff a track is actually playing (`!paused && !ended`); text filled from the active element's `data-title` / `data-artist` via `textContent`; `Escape` hides it. The equaliser creates an `AnalyserNode` lazily per room inside `try/catch`, never twice per element, and runs a single `requestAnimationFrame` loop that writes one `--level` per bar; without Web Audio it falls back to a `setInterval` sine walk; under reduced motion the levels are written once and no loop starts. Every loop is cancelled when playback stops — no orphaned timers.
+13. **Time capsule** — `localStorage['jth-first-seen']` (ISO string) read through the same `try/catch` helpers as the theme; a missing or unparsable value is replaced with now. `#capsule` is unhidden only after a date is rendered as `dd/mm/yyyy`. No network, no cookie.
 
 Never use `innerHTML` with variable data; use `textContent`/`classList`/`setAttribute`.
 
@@ -123,7 +128,7 @@ Never use `innerHTML` with variable data; use `textContent`/`classList`/`setAttr
 
 | # | Deviation | Reason |
 |---|---|---|
-| D1 | **Restored** at the owner's request: background-music player and the original favicon (was: both omitted) | The owner asked for their own page's play button and icon back. Audio is the owner's own content, re-encoded to 96 kbps MP3 (6.0 MB for both tracks) and never fetched until the visitor presses play — so the licensing and autoplay concerns that motivated the first pass's removal no longer apply. |
+| D1 | **Restored** at the owner's request: background-music player and the original favicon (was: both omitted) | The owner asked for their own page's play button and icon back. Audio is the owner's own 2022 uploads, re-encoded to 96 kbps MP3 and renamed one-per-room (`as-it-was.mp3` / `everything-i-wanted.mp3`), never fetched until the visitor presses play — so the licensing and autoplay concerns that motivated the first pass's removal no longer apply. No third-party audio was downloaded; swapping masters means dropping files into `assets-src/` and re-running the pipeline. |
 | D2 | Next.js → hand-written HTML/CSS/JS | No build/runtime on Pages; a 2022 framework site cannot hit the performance budget or the "still opens in ten years" goal. |
 | D3 | FAQ answer 03 still says "Next.js" | Verbatim historical content; see `02-content-inventory.md`. |
 | D4 | Anchor ids romanised (`#gioi-thieu` instead of `#about`) with the old names kept as alias `id`s | Readable Vietnamese URLs; both resolve. Actually simpler: keep **both** — primary is romanised, and `#about`/`#role`/`#goal`/`#FAQ` remain as hidden alias anchors for old inbound links. |

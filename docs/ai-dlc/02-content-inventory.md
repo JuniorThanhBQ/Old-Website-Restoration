@@ -113,6 +113,22 @@ diacritics preserved exactly. Where the original had a typo or awkward spacing, 
 | Youtube | https://www.youtube.com/@Juniorthanh09_OU |
 | The Art Of Documentary | https://theartofdocumentary.com/ |
 
+## Signature/chrome added by this revision (not from the 2022 build)
+
+These strings are new interface chrome, not restored copy. They are normative for this revision
+and asserted by `tools/qa.py`:
+
+| Where | String |
+|---|---|
+| Liner HUD label | `Đang phát` |
+| Liner HUD, Now room | `everything i wanted` / `Billie Eilish` |
+| Liner HUD, Then room | `As It Was` / `Harry Styles` |
+| Liner HUD credit | `Product created by V.T.Thanh Assistant.` |
+| Footer seal | `V.T.T.A` |
+| Footer credit | `Product created by V.T.Thanh Assistant.` |
+| Footer capsule | `Lần đầu ghé thăm:` + `dd/mm/yyyy` + `· căn phòng này nhớ bạn` |
+| `<meta name="generator">` | `V.T.Thanh Assistant` |
+
 ## Retained as-is (intentional, do not "fix")
 
 - Space-before-period quirks: `thời gian rảnh .`, `cuộc sống .Còn lại`.

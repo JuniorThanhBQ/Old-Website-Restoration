@@ -28,9 +28,9 @@ Translated into interface decisions (traceability: R2 → token/component):
 
 | Song / video motif | Design decision |
 |---|---|
-| "It's not the same as it was" | A **dual-palette system**: `Now` (bone/ink) and `Then` (near-black + amber glass — literally the 2022 look). One control switches between them; the visitor chooses which past they are looking at. |
+| "It's not the same as it was" | A **dual-palette system**: `Now` (cold blue daylight) and `Then` (near-black + amber glass — literally the 2022 look). One control switches between them; the visitor chooses which past they are looking at. Each room also gets its own song, so the switch changes the air, not just the ink. |
 | Rotating stage | Slow-rotating circular motif: the ikigai diagram, the scroll-progress ring, and the rotating needle in the hero badge. All disabled under `prefers-reduced-motion`. |
-| Primary-colour blocking on concrete | Signal red accent + ink navy on a warm bone canvas; primary colours used strictly as blocks/accents, never as gradients-where-a-block-would-do. |
+| Primary-colour blocking on concrete | A single blue tone (`#4292C6`) plus navy ink on a cool paper canvas; primary colours used strictly as blocks/accents, never as gradients-where-a-block-would-do. |
 | Wide-angle symmetry, hard edges | A 12-column grid with visible hairline rules; radius kept small (2–6px) so panels read as *plates*, not bubbles. |
 | Mid-century warmth | A variable serif (Fraunces) for display type against a neutral grotesque (Inter) for text. |
 | Nostalgia / archival | Footnote-style bracketed numbering, letterpress-ish rules, `01 / 07` counters, and a footer "design idea" credit, echoing the original's `The Art Of Documentary` credit. |
@@ -82,7 +82,7 @@ Translated into interface decisions (traceability: R2 → token/component):
 
 - No framework, bundler, or runtime dependency — the value here is a static memento that will still open in ten years.
 - No CMS, comments, contact form, analytics, or cookie banner (nothing to consent to).
-- No re-hosting of *third-party* audio. The 2022 site streamed `song.mp3`/`song2.mp3`; the first pass dropped the player as a licensing risk. **The owner then asked for it back**, and the audio shipped is the owner's own page content, so it is restored (see D1). The player stays opt-in: nothing is fetched or played until the visitor presses the button.
+- No re-hosting of *third-party* audio. The 2022 site streamed `song.mp3`/`song2.mp3`; the first pass dropped the player as a licensing risk. **The owner then asked for it back**, and the audio shipped is the owner's own page content, so it is restored (see D1) — now as one song per room (*"As It Was"* for `Then`, *"everything i wanted"* for `Now`). The player stays opt-in: nothing is fetched or played until the visitor presses the button.
 - No deployment to Vercel/Render/Netlify (explicitly out of scope in the issue).
 
 ## 6. Human-in-the-loop decisions (AI-DLC oversight)
@@ -91,5 +91,6 @@ Translated into interface decisions (traceability: R2 → token/component):
 |---|---|---|
 | Adopt the dual-palette interpretation of "As It Was" | Requester approved by asking for the song's *meaning* to be used | Documented as the primary creative risk. |
 | Restore the background-music player and the 2022 favicon | **Owner**, issue comment on the reopened ticket | Supersedes the first pass's D1. The owner asked for their own page's favicon and play button back, so both are restored from the original assets rather than redrawn. Autoplay is still refused — the button is the only way audio starts. |
+| Re-tone `Now` to `#4292C6`, one song per room, whole-page theme sync | **Owner**, follow-up brief | Supersedes the first pass's bone/red palette. The requested tone is used verbatim as `--accent`; two derived roles (`--accent-text`, `--accent-fill`) carry it into body-size text and small-text fills where `#4292C6` alone cannot clear AA. The sync is token-driven (hero, header, footer, cards), not a per-component patch. |
 | Static HTML/CSS/JS instead of Next.js | Agent | Required by GitHub Pages + R5 budgets. |
 | Publish via Actions workflow rather than `gh-pages` branch | Agent | Automation identity lacks `admin`, so Pages must be enabled by the owner or by a workflow with `pages: write`. |

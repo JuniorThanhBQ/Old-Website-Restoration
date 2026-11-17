@@ -10,9 +10,9 @@
 <meta name="description" content="Xin chào! Mình là Junior Thành, hiện đang là sinh viên năm 2 tại Đại học Mở TP.Hồ Chí Minh. Mình đang theo học ngành CNTT và mình mong rằng chúng ta có thể cùng nhau học tập và phát triển nhé.">
 <meta name="keywords" content="OU, Junior Thành, Nhà Bè, Đại học Mở, Đại học Mở TP.HCM, HCMC-OU, năm 2">
 <meta name="author" content="Junior Thành">
+<meta name="generator" content="V.T.Thanh Assistant">
 <meta name="copyright" content="© 2024 Junior Thành, Mọi bản quyền được bảo lưu!">
-<meta name="theme-color" content="#F4F0E8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0B0C0E" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EEF3F7">
 <link rel="canonical" href="https://juniorthanhbq.github.io/Old-Website-Restoration/">
 
 <meta property="og:site_name" content="Junior Thành">
@@ -78,6 +78,14 @@
         <span class="menu-toggle__bars" aria-hidden="true"><i></i><i></i></span>
       </button>
     </div>
+
+    <section class="liner" id="liner" hidden aria-label="Ghi chú bản thu">
+      <p class="liner__label"><span class="liner__dot" aria-hidden="true"></span>Đang phát</p>
+      <p class="liner__song" id="liner-song">everything i wanted</p>
+      <p class="liner__artist" id="liner-artist">Billie Eilish</p>
+      <p class="liner__eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></p>
+      <p class="liner__credit">Product created by <span>V.T.Thanh Assistant.</span></p>
+    </section>
   </div>
 
   <div class="mobile-menu" id="mobile-menu" hidden>
@@ -94,8 +102,10 @@
   </div>
 </header>
 
-<audio id="music-a" preload="none" data-src="./assets/media/as-it-was-1.mp3"></audio>
-<audio id="music-b" preload="none" data-src="./assets/media/as-it-was-2.mp3"></audio>
+<audio id="music-now" preload="none" loop data-src="./assets/media/everything-i-wanted.mp3"
+       data-title="everything i wanted" data-artist="Billie Eilish"></audio>
+<audio id="music-then" preload="none" loop data-src="./assets/media/as-it-was.mp3"
+       data-title="As It Was" data-artist="Harry Styles"></audio>
 
 <main id="main">
 
@@ -499,7 +509,24 @@
     </div>
 
     <div class="site-footer__bottom">
-      <p>© <span id="year">2026</span> Junior Thành. Mọi quyền được bảo lưu</p>
+      <div class="site-footer__legal">
+        <p>© <span id="year">2026</span> Junior Thành. Mọi quyền được bảo lưu</p>
+        <p class="capsule" id="capsule" hidden>
+          <span>Lần đầu ghé thăm:</span>
+          <span class="capsule__date" id="capsule-date"></span>
+          <span>· căn phòng này nhớ bạn</span>
+        </p>
+      </div>
+
+      <div class="signature">
+        <svg class="signature__seal" viewBox="0 0 64 64" width="43" height="43" aria-hidden="true" focusable="false">
+          <circle class="seal__ring--dashed" cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2.5 4.5"/>
+          <circle cx="32" cy="32" r="22.5" fill="none" stroke="currentColor" stroke-width="1" opacity="0.55"/>
+          <text x="32" y="36.5" text-anchor="middle" fill="currentColor">V.T.T.A</text>
+        </svg>
+        <p class="signature__text">Product created by<br><span class="signature__name">V.T.Thanh Assistant</span></p>
+      </div>
+
       <p class="site-footer__credit">Ý tưởng Design: <a href="https://theartofdocumentary.com/" target="_blank" rel="noopener noreferrer">The Art Of Documentary</a></p>
     </div>
   </div>

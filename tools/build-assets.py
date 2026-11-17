@@ -53,9 +53,11 @@ def poster():
 
 def music():
     """The 2022 player's two songs, re-encoded for streaming. Provenance stays
-    in assets-src/song.mp3 + song2.mp3; these are the shipped derivatives."""
+    in assets-src/song.mp3 + song2.mp3; these are the shipped derivatives, one
+    per room: song.mp3 scores "Then", song2.mp3 scores "Now"."""
     exe = ffmpeg()
-    for src, dest in (("song.mp3", "as-it-was-1.mp3"), ("song2.mp3", "as-it-was-2.mp3")):
+    for src, dest in (("song.mp3", "as-it-was.mp3"),
+                      ("song2.mp3", "everything-i-wanted.mp3")):
         subprocess.run(
             [exe, "-i", str(SRC / src), "-map_metadata", "-1",
              "-ac", "2", "-ar", "44100", "-b:a", "96k", "-y", str(MEDIA / dest)],
