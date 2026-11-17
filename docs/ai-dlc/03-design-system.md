@@ -6,11 +6,18 @@ implementation has freedom while staying consistent.
 
 ## 1. Concept
 
-**"Two rooms in one house."** The visitor stands in the *present* — a warm, bone-coloured,
-editorial room with hard rules and a red accent, like a mid-century record sleeve. One control
-(`Now` / `Then`) walks them into the *past*: the 2022 site's own near-black room with amber glass
-panels. Same floor plan, same furniture, different light. That is the song in one interaction —
-the place is identical, the feeling is not.
+**"Two rooms in one house."** The visitor stands in the *present* — a cold, blue-lit editorial
+room with hard rules, like a record sleeve left in daylight — and one control (`Now` / `Then`)
+walks them into the *past*: the 2022 site's own near-black room with amber glass panels. Same
+floor plan, same furniture, different light — and a different song in each room. That is the
+song in one interaction: the place is identical, the feeling is not.
+
+The two rooms are named after what they hold, not after a colour:
+
+- **Now** — Billie Eilish, *"everything i wanted"*. Submerged, lucid, cool. Paper `#EEF3F7`,
+  deep-navy ink, a blue tone of `#4292C6`.
+- **Then** — Harry Styles, *"As It Was"*. Warm, archival, lamplit. Near-black `#0B0C0E` with
+  the 2022 site's own amber `#FFA200`.
 
 The 2022 interface characteristics survive as *furniture*: full-bleed hero video with the name set
 over it, pill-shaped nav with a fill-on-hover, bracketed `[ 01 ]` FAQ numbering, a radial four-circle
@@ -19,20 +26,31 @@ over it, pill-shaped nav with a fill-on-hover, bracketed `[ 01 ]` FAQ numbering,
 ## 2. Colour tokens
 
 Two palettes are themable via `[data-theme]` on `<html>`. Name = semantic role, value = palette.
+Every surface — page canvas, hero scrim, header scrim, footer wash, ikigai core — reads from this
+set, so switching rooms re-lights the whole page rather than tinting a few links.
 
 ### Now (default, light)
 
 | Token | Value | Use |
 |---|---|---|
-| `--canvas` | `#F4F0E8` warm bone | page background |
-| `--canvas-deep` | `#E7E0D3` | alternating band, inset wells |
-| `--ink` | `#14171C` near-black | body text, rules |
-| `--ink-soft` | `#5A5F68` | secondary text (4.9:1 on canvas) |
-| `--rule` | `rgba(20,23,28,0.16)` | hairline rules, grid lines |
-| `--accent` | `#C3341F` signal red | links, active states, accents |
-| `--accent-ink` | `#FFFFFF` | text on accent fill |
-| `--surface` | `#FFFDF9` | raised card |
-| `--shadow` | `0 1px 0 rgba(20,23,28,.05), 0 18px 40px -24px rgba(20,23,28,.35)` | card lift |
+| `--canvas` | `#EEF3F7` cool paper | page background |
+| `--canvas-deep` | `#DFE8F0` | alternating band, inset wells |
+| `--canvas-ink` | `#0B1B29` deep navy | inverse surfaces, ikigai core |
+| `--ink` | `#0E1C28` navy-black | body text |
+| `--ink-soft` | `#4A5A69` | secondary text (6.4:1 on canvas) |
+| `--rule` | `rgba(14,28,40,0.16)` | hairline rules, grid lines |
+| `--rule-strong` | `rgba(14,28,40,0.40)` | emphasised rules, chip borders |
+| `--accent` | `#4292C6` blue | the room's tone: progress, rules, large display, icons |
+| `--accent-text` | `#2A6E9C` | links and small accent text (4.9:1 on canvas) |
+| `--accent-fill` | `#2F7BA9` | accent fills carrying small text (4.6:1 with white) |
+| `--accent-ink` | `#FFFFFF` | text on the fill |
+| `--surface` | `#FBFDFE` | raised card |
+| `--card-bg` | `#FBFDFE` | opaque card (the liner HUD) |
+| `--hero-bg` / `--hero-tint` | `#06131F` / `6,19,31` | hero bed and scrim tint |
+| `--hero-accent` | `#7CC0E8` | the name accent and clock on dark (7.4:1 on the scrim) |
+| `--deep-bg` | `#0B1B29` | footer wash |
+| `--deep-ink` / `--deep-soft` / `--deep-quiet` | `#E7F0F7` / `0.82α` / `0.62α` | footer text tiers |
+| `--shadow` | `0 1px 0 rgba(14,28,40,.05), 0 20px 44px -26px rgba(14,28,40,.32)` | card lift |
 
 ### Then (the 2022 room)
 
@@ -40,16 +58,36 @@ Two palettes are themable via `[data-theme]` on `<html>`. Name = semantic role, 
 |---|---|---|
 | `--canvas` | `#0B0C0E` | page background |
 | `--canvas-deep` | `#141619` | band |
+| `--canvas-ink` | `#06070A` | ikigai core, deepest edge |
 | `--ink` | `#F2EFE9` | body text |
-| `--ink-soft` | `#A8AEB8` | secondary (7.2:1 on `#0B0C0E`) |
+| `--ink-soft` | `#A8AEB8` | secondary (8.8:1 on `#0B0C0E`) |
 | `--rule` | `rgba(242,239,233,0.18)` | rules |
-| `--accent` | `#FFA200` amber | the original site's own accent, restored |
+| `--rule-strong` | `rgba(242,239,233,0.46)` | emphasised rules |
+| `--accent` / `--accent-text` / `--accent-fill` | `#FFA200` amber | the original site's own accent, restored (9.7:1 on canvas) |
 | `--accent-ink` | `#0B0C0E` | text on amber |
-| `--surface` | `rgba(255,255,255,0.05)` | raised card |
-| `--shadow` | `0 18px 60px -30px #000` | depth |
+| `--surface` | `rgba(255,255,255,0.05)` | translucent card |
+| `--card-bg` | `#16191D` | opaque card (the liner HUD) |
+| `--hero-bg` / `--hero-tint` | `#0B0C0E` / `6,7,9` | hero bed and scrim tint |
+| `--hero-accent` | `#FFB43A` | the name accent and clock on dark |
+| `--deep-bg` | `#06070A` | footer wash |
+| `--shadow` | `0 22px 60px -30px #000` | depth |
 
-Amber `#FFA200` on `#0B0C0E` = 9.0:1. Red `#C3341F` on bone `#F4F0E8` = 4.7:1 (body-safe).
-Both accent/`--accent-ink` pairs are checked in `VERIFICATION.md`.
+### Why four accent roles instead of one
+
+A single accent cannot be both a large display colour and a body-text colour at `#4292C6`: it is
+5.1:1 on the navy hero but only 3.4:1 on the light canvas, which fails AA for anything smaller than
+large text. Rather than silently break the requested tone or quietly darken it everywhere, the
+token set separates the *tone* from its *roles*:
+
+| Role | Reads as | Guarantee |
+|---|---|---|
+| `--accent` | the room's tone | exactly the briefed value; used where WCAG asks 3:1 (rules, fills behind nothing, large display, icons, focus ring) |
+| `--accent-text` | the tone, darkened for small text | ≥ 4.5:1 on the canvas in both rooms |
+| `--accent-fill` | the tone, darkened for small text *on* the tone | ≥ 4.5:1 against `--accent-ink` |
+| `--accent-ink` | the text that sits on a fill | flips white/near-black per room |
+
+Measured on rendered pixels (not on the token values in isolation): Now body copy 15.5:1, Now link
+4.9:1, Now footer label 5.1:1; Then body copy 17.1:1, Then link 9.7:1, Then footer label 10.0:1.
 
 ## 3. Typography
 
@@ -101,7 +139,8 @@ reinterpretation of it. Layers, back to front: muted looping video (`train.mp4`)
 scrim. On top, three blocks in the prototype's own order:
 
 1. **Name** — indented about a quarter of the viewport from the left, so the column row below can
-   run underneath it. `Junior Thành` on one line (display serif, `Thành` in amber), then
+   run underneath it. `Junior Thành` on one line (display serif, `Thành` in `--hero-accent` — amber
+   in the past room, ice blue in the present one), then
    `Văn Trung Thành - K23 ᵀᴹ` as a mono byline beneath.
 2. **Hairline** — full-width rule, the prototype's `<hr>`, separating the name from the facts.
 3. **Columns** — four across at desktop, stacking on mobile: `HCMC-OU`, `Châm ngôn`
@@ -112,10 +151,39 @@ scrim. On top, three blocks in the prototype's own order:
 The first pass wrapped all of this in a frosted plate with a rotating badge and a scroll cue. Those
 were my inventions, not the original's, so they are gone — the glass tokens went with them.
 
-**Header music button** — the prototype's play control, restored at the owner's request. A single
-icon button in `.header-tools` (`aria-pressed`, label toggles between `Bật nhạc nền` and
-`Tắt nhạc nền`) playing the original two tracks in sequence. Nothing is fetched until it is
-pressed, and `document.title` shows `elapsed / total` while playing, as the 2022 site did.
+The hero is the clearest proof that the rooms are different light rather than different pages: the
+same footage is graded per room through `--hero-media-filter` (cool, desaturated and hue-shifted
+towards the blue in `Now`; a touch warmer and lightly sepia'd in `Then`), and the scrim gradients
+are generated from `--hero-tint`. Nothing about the composition moves.
+
+**Header music button** — the prototype's play control, restored at the owner's request, now with
+one song per room. A single icon button in `.header-tools` (`aria-pressed`, label toggles between
+`Bật nhạc nền` and `Tắt nhạc nền`) plays the soundtrack of the room being viewed: `Then` →
+*"As It Was"*, `Now` → *"everything i wanted"*. Nothing is fetched until it is pressed. Switching
+rooms pauses one track and resumes the other at its own position; both loop. `document.title`
+shows `elapsed / total` while playing, as the 2022 site did.
+
+**Liner notes HUD (`#liner`)** — the feature this revision adds, and the place the assistant signs
+its work. A card anchored under the header, visible exactly while a track plays: room label, song
+title (display serif), artist (mono, `--accent-text`), a five-bar equaliser driven by a Web Audio
+`AnalyserNode` — one bar per frequency band — and the credit line
+`Product created by V.T.Thanh Assistant.` Bars are scaled with a per-bar `--level` custom property
+so CSS owns the geometry and JS only writes numbers. Fallbacks: without `AudioContext` the levels
+come from a deterministic sine walk; under `prefers-reduced-motion` they are set once, statically;
+`Escape` hides the card without stopping playback; with JS off the card never appears. Its
+background is `--card-bg` rather than `--surface`, because a translucent card over the page would
+lose the artist line in the dark room.
+
+**Signature seal** — a 43 px SVG in the footer: dashed outer ring (slow CSS rotation, stopped under
+reduced motion), inner rule, `V.T.T.A` in mono. Beside it, in two lines, the product credit. It is
+deliberately small and printed in `--accent`, so it reads as a maker's stamp on the page rather
+than a banner.
+
+**Time capsule (`#capsule`)** — a footer line that records the first visit in
+`localStorage['jth-first-seen']` and prints it as `dd/mm/yyyy`, followed by *"căn phòng này nhớ
+bạn"* (this room remembers you). It ships with the `hidden` attribute and is only revealed when
+the script can parse a date, so a no-JS or storage-blocked visitor sees nothing rather than a
+broken label. Nothing is transmitted.
 
 **Section header** — the recurring editorial unit: mono index `01` + rule + label
 (`GIỚI THIỆU`), then display h2. Establishes the archival register and makes the page scannable.

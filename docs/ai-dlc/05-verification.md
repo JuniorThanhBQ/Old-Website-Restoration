@@ -7,7 +7,7 @@ Reproduce with:
 
 ```bash
 python3 tools/build-fonts.py --check   # font glyph coverage gate
-python3 tools/qa.py                    # 114 functional/structural checks
+python3 tools/qa.py                    # 156 functional/structural checks
 ```
 
 `tools/qa.py` exits non-zero on any failure, so it is safe as a CI gate.
@@ -27,12 +27,16 @@ python3 tools/qa.py                    # 114 functional/structural checks
 
 | Metric | Value |
 |---|---|
-| First Contentful Paint | 1.5 s |
-| Largest Contentful Paint | 2.5 s |
-| Total Blocking Time | 70 ms |
+| First Contentful Paint | 1.4 s |
+| Largest Contentful Paint | 2.4 s |
+| Total Blocking Time | 40–60 ms (run variance) |
 | Cumulative Layout Shift | **0** |
-| Speed Index | 1.5 s |
+| Speed Index | 1.4 s |
 | Total byte weight | 278 KiB |
+
+The `Then` room was measured separately (a copy of the document with `data-theme="then"`, same
+assets): **97 / 100 / 100 / 100**, LCP 2.5 s, TBT 0 ms, CLS 0. The palette change does not move
+performance; the two rooms differ only in token values.
 
 **Desktop**:
 
@@ -49,7 +53,8 @@ Target was ≥ 90 on mobile. Achieved 97.
 
 ## 2. axe-core (WCAG 2.1 A + AA + best-practice rules)
 
-Run with all ten FAQ panels forced open so collapsed content is audited too:
+Re-run after this revision, with all ten FAQ panels forced open **and** the liner HUD shown, so
+the new components are audited in their visible state:
 
 | Theme | Viewport | Violations | Passing rules |
 |---|---|---|---|
@@ -58,33 +63,49 @@ Run with all ten FAQ panels forced open so collapsed content is audited too:
 | Then | 1440×900 | **0** | 42 |
 | Then | 375×812 | **0** | 42 |
 
+One real defect was found this way: the HUD's entrance animation faded its own text from
+`opacity: 0`, so a mid-animation sample measured the label and artist at 4.29:1 and 3.64:1. The
+fix was to animate the transform only — the card slides in, but its text is never translucent,
+so every frame is compliant.
+
 ## 3. Contrast — measured from composited pixels, not assumed
 
-The hero sits on video, so ratio was computed from real screenshot pixels behind each
-text block, not from declared CSS colours.
+The hero sits on video, so every ratio below was computed from real screenshot pixels behind each
+text block (text made transparent, background sampled from the element's own box, text alpha
+composited back over it), not from declared CSS colours. Both rooms, 19 text/background pairs:
 
-| Element | Ratio | Required |
-|---|---|---|
-| Hero title | 17.3 | 3.0 (large) |
-| Hero standfirst | 17.4 | 3.0 (large) |
-| Hero motto | 17.1 | 4.5 |
-| Fact list `dt` | 18.9 | 4.5 |
-| Fact list `dd` | 16.1 | 4.5 |
-| Byline | 19.3 | 4.5 |
-| Working hours | 19.1 | 4.5 |
-| Clock label | 18.5 | 4.5 |
-| Clock value (amber) | 9.6 | 4.5 |
-| Eyebrow (amber) | 11.1 | 4.5 |
+| Element | Now | Then | Required |
+|---|---|---|---|
+| Body copy | 15.47 | 17.05 | 4.5 |
+| Body link | 4.94 | 9.71 | 4.5 |
+| Section sub (`--ink-soft`) | 6.36 | 8.77 | 4.5 |
+| Hero title | 14.13 | 15.77 | 3.0 (large) |
+| Hero column body | 11.31 | 12.91 | 4.5 |
+| Hero byline | 14.25 | 15.86 | 4.5 |
+| Fact list `dd` | 10.61 | 12.26 | 4.5 |
+| Clock value (`--hero-accent`) | 7.44 | 9.51 | 4.5 |
+| Footer link | 10.45 | 11.72 | 4.5 |
+| Footer label | 5.12 | 10.00 | 4.5 |
+| Footer clock | 5.12 | 10.00 | 4.5 |
+| Signature name | 15.13 | 17.55 | 4.5 |
+| Signature text | 6.47 | 6.50 | 4.5 |
+| Capsule date | 5.12 | 10.00 | 4.5 |
+| Role-card subtitle | 4.94 | 9.71 | 4.5 |
+| Interlude citation | 4.45 | 8.99 | 3.0 (large) |
+| Liner song title | 16.94 | 15.37 | 4.5 |
+| Liner artist | 5.40 | 8.75 | 4.5 |
+| Liner credit | 6.96 | 7.90 | 4.5 |
 
-Body copy on canvas: 15.8 (Now) / 17.1 (Then). Muted `--ink-soft`: 5.65 / 8.77.
-All secondary text also clears 4.5.
+Minimum across both rooms: 4.45 (large-text citation), 4.94 (small text). No pair falls below AA.
+The tightest small-text pair is `--accent-text` on the Now canvas (4.94), which is exactly why
+that role exists separately from the `#4292C6` tone (3.4:1 there).
 
 The hero scrim was verified to keep everything behind the text legible: the media renders at
 luminance ≈ 0.04–0.08 under the title and column bands, so white text sits at >12:1 there.
 
 ## 4. Structural and content fidelity (`tools/qa.py`)
 
-114 checks, all passing. Coverage:
+156 checks, all passing. Coverage:
 
 - **Content** — all 100+ normative Vietnamese strings from
   `02-content-inventory.md` present, diacritics intact.
@@ -99,6 +120,15 @@ luminance ≈ 0.04–0.08 under the title and column bands, so white text sits a
   every `<img>` has `alt` and dimensions.
 - **Interactive** — FAQ opens/closes (10 rows, `aria-expanded` + `hidden` correct),
   theme switches both ways with `aria-pressed`, mobile menu opens/closes.
+- **Rooms** — each palette applied end to end (canvas, `--accent` token, footer wash, hero
+  scrim) and asserted *distinct* across themes, not merely present.
+- **Soundtrack** — two room tracks, `preload="none"`, `loop`, no `src` before intent; only the
+  active room plays; a room switch hands playback over and switching back resumes the same
+  track mid-song; pause stops both and restores `document.title`.
+- **Liner HUD** — appears only while playing, carries the room's title/artist, follows a room
+  switch, hides on `Escape` and on pause, stays inside the viewport at 320 px.
+- **Attribution** — `Product created by` + `V.T.Thanh Assistant` in the footer and in the HUD,
+  seal SVG with its `<text>` node, capsule revealed by JS with a `dd/mm/yyyy` date.
 - **Responsive** — no horizontal overflow at 320 / 375 / 768 / 1024 / 1440 / 1920 px.
 - **Reduced motion** — no video sources attached, all revealed content visible.
 - **No JavaScript** — desktop header nav still visible and usable, all ten FAQ answers
@@ -184,7 +214,7 @@ rewriting it would be editing the artefact rather than restoring it.
 | Lighthouse mobile, production URL | perf **98–100** · a11y **100** · BP **100** · SEO **100**; LCP 1.8–2.3 s, CLS 0, ~220 KiB |
 | Lighthouse desktop, production URL | **100 / 100 / 100 / 100**; FCP 0.4 s, LCP 0.5 s, TBT 0 ms |
 | axe-core on production, both themes × desktop/mobile | **0 violations**, 42 rules passing |
-| Theme switch live | bg `#F4F0E8` → `#0B0C0E`, `data-theme` set, choice persisted, survives reload |
+| Theme switch live | bg `#EEF3F7` → `#0B0C0E`, `data-theme` set, choice persisted, survives reload |
 | Clock | ticks (`06:20:30 PM` → `06:20:32 PM`) |
 | FAQ | expands/collapses with `aria-expanded` and `hidden` in sync |
 | Hero video | source attached and playing after load |

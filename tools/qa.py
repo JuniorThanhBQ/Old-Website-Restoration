@@ -297,79 +297,234 @@ def run():
               "music: starts in the paused state")
         check(mt.get_attribute("aria-label") not in (None, ""),
               "music: control has an accessible name")
-        check(page.eval_on_selector_all("audio", "els => els.length") == 2,
-              "music: two tracks wired (as in 2022: song.mp3 then song2.mp3)")
-        check(page.evaluate(
-            """() => [...document.querySelectorAll('audio')]
-                     .every(a => a.preload === 'none' && !a.getAttribute('src'))"""),
-            "music: no track is fetched until the visitor presses play")
         check(page.title().strip() == "Junior Thành",
               "music: document.title untouched before playing")
 
-        page.click("#music-toggle")
-        page.wait_for_function(
-            "() => !document.getElementById('music-a').paused", timeout=5000)
-        page.wait_for_timeout(1600)
-        check(mt.get_attribute("aria-pressed") == "true",
-              "music: pressing play sets aria-pressed=true")
-        playing_title = page.title()
-        check(bool(re.match(r"^\d+:\d{2} / \d+:\d{2}$", playing_title)),
-              f"music: title shows elapsed / total while playing ({playing_title!r})")
-        check(page.eval_on_selector("#music-a", "a => a.currentTime > 0"),
-              "music: the first track actually advanced")
-        check(page.evaluate(
-            """() => {
-              const p = document.querySelector('.music-toggle__icon--play');
-              const q = document.querySelector('.music-toggle__icon--pause');
-              return getComputedStyle(p).display === 'none' && getComputedStyle(q).display !== 'none';
-            }"""), "music: icon swaps to pause while playing")
-        check(page.eval_on_selector("#music-a", "a => a.volume < 1"),
-              "music: plays at a reduced volume, not full blast")
+        audio_meta = page.evaluate(
+            """() => [...document.querySelectorAll('audio')].map(a => ({
+                id: a.id, preload: a.preload, loop: a.loop,
+                hasSrc: a.hasAttribute('src'),
+                datasrc: a.dataset.src || '',
+                title: a.dataset.title || '', artist: a.dataset.artist || '' }))""")
+        by_id = {m["id"]: m for m in audio_meta}
+        check(len(audio_meta) == 2 and set(by_id) == {"music-now", "music-then"},
+              f"music: exactly two room tracks wired, music-now / music-then ({sorted(by_id)})")
+        check(all(m["preload"] == "none" for m in by_id.values()),
+              "music: both tracks preload=none, nothing fetched until play")
+        check(all(not m["hasSrc"] for m in by_id.values()),
+              "music: no src attribute until first play")
+        check(all(m["loop"] for m in by_id.values()),
+              "music: each room track loops")
+        now_meta, then_meta = by_id.get("music-now", {}), by_id.get("music-then", {})
+        check(now_meta.get("title") == "everything i wanted"
+              and now_meta.get("artist") == "Billie Eilish"
+              and now_meta.get("datasrc") == "./assets/media/everything-i-wanted.mp3",
+              f"music: music-now metadata ({now_meta})")
+        check(then_meta.get("title") == "As It Was"
+              and then_meta.get("artist") == "Harry Styles"
+              and then_meta.get("datasrc") == "./assets/media/as-it-was.mp3",
+              f"music: music-then metadata ({then_meta})")
 
-        page.click("#music-toggle")
-        page.wait_for_timeout(500)
-        check(mt.get_attribute("aria-pressed") == "false",
-              "music: pressing again pauses")
-        check(page.evaluate(
-            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
-                     return a.paused && b.paused; }"""), "music: both tracks are stopped")
-        check(page.title().strip() == "Junior Thành",
-              "music: document.title restored on pause")
-        page.screenshot(path=str(OUT / "music-paused.png"), clip={"x": 0, "y": 0, "width": 1440, "height": 120})
-
-        page.click("#music-toggle")
-        page.wait_for_function("() => !document.getElementById('music-a').paused", timeout=5000)
-        page.evaluate("""() => { const a = document.getElementById('music-a');
-                             a.currentTime = Math.max(0, a.duration - 0.4); }""")
-        page.wait_for_function("() => !document.getElementById('music-b').paused", timeout=10000)
-        page.wait_for_timeout(600)
-        check(page.evaluate(
-            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
-                     return a.paused && !b.paused; }"""),
-            "music: track 1 chains into track 2")
-        check(mt.get_attribute("aria-pressed") == "true",
-              "music: button stays pressed across the track change")
-        page.evaluate("""() => { const b = document.getElementById('music-b');
-                             b.currentTime = Math.max(0, b.duration - 0.4); }""")
-        page.wait_for_function(
-            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
-                    return !a.paused && b.paused; }""", timeout=10000)
-        check(mt.get_attribute("aria-pressed") == "true",
-              "music: the pair loops back to track 1")
-        page.click("#music-toggle")
-        page.wait_for_timeout(400)
-
-        page.click("#music-toggle"); page.click("#music-toggle"); page.click("#music-toggle")
-        page.wait_for_timeout(1200)
-        consistent = page.evaluate(
-            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
-                     const pressed = document.getElementById('music-toggle').getAttribute('aria-pressed') === 'true';
-                     return pressed === (!a.paused || !b.paused); }""")
-        check(consistent, "music: rapid clicks leave aria-pressed matching the audio")
-        if page.evaluate("() => [...document.querySelectorAll('audio')].some(a => !a.paused)"):
+        def music_session():
+            """Press / hold across rooms / stop / rapid-click consistency checks."""
             page.click("#music-toggle")
-        page.wait_for_timeout(400)
+            page.wait_for_function(
+                "() => !document.getElementById('music-now').paused", timeout=5000)
+            page.wait_for_timeout(1600)
+            check(mt.get_attribute("aria-pressed") == "true",
+                  "music: pressing play sets aria-pressed=true")
+            check(page.evaluate(
+                """() => { const a = document.getElementById('music-now'),
+                                b = document.getElementById('music-then');
+                    return !a.paused && b.paused; }"""),
+                  "music: only the Now room's track plays")
+            playing_title = page.title()
+            check(bool(re.match(r"^\d+:\d{2} / \d+:\d{2}$", playing_title)),
+                  f"music: title shows elapsed / total while playing ({playing_title!r})")
+            check(page.evaluate("() => document.getElementById('music-now').volume < 1"),
+                  "music: plays reduced volume, not full blast")
+            check(page.evaluate(
+                """() => {
+                    const p = document.querySelector('.music-toggle__icon--play');
+                    const q = document.querySelector('.music-toggle__icon--pause');
+                    return getComputedStyle(p).display === 'none'
+                        && getComputedStyle(q).display !== 'none';
+                }"""), "music: icon swaps to pause while playing")
+            check(not page.eval_on_selector("#liner", "e => e.hidden"),
+                  "music: liner notes HUD is shown while a track plays")
+            song = page.eval_on_selector("#liner-song", "e => e.textContent")
+            artist = page.eval_on_selector("#liner-artist", "e => e.textContent")
+            check(song == "everything i wanted" and artist.strip().upper() == "BILLIE EILISH",
+                  f"music: HUD reads Now track metadata ({song!r} / {artist!r})")
 
+            page.click('[data-set-theme="then"]')
+            page.wait_for_function(
+                "() => !document.getElementById('music-then').paused", timeout=5000)
+            page.wait_for_timeout(400)
+            check(page.evaluate(
+                """() => { const a = document.getElementById('music-now'),
+                                b = document.getElementById('music-then');
+                    return a.paused && !b.paused; }"""),
+                  "music: switching to Then pauses Now and starts Then")
+            check(mt.get_attribute("aria-pressed") == "true",
+                  "music: button stays pressed across a room switch")
+            song = page.eval_on_selector("#liner-song", "e => e.textContent")
+            artist = page.eval_on_selector("#liner-artist", "e => e.textContent")
+            check(song == "As It Was" and artist.strip().upper() == "HARRY STYLES",
+                  f"music: HUD reads Then track metadata ({song!r} / {artist!r})")
+            page.wait_for_timeout(1100)
+            then_title = page.title()
+            # Then's track is 3:03, the paused Now track is 4:47 — the length tells them apart
+            check(bool(re.match(r"^\d+:\d{2} / 3:03$", then_title)),
+                  f"music: title ticker follows the room switch to Then's length, "
+                  f"not the paused Now track ({then_title!r})")
+            page.screenshot(path=str(OUT / "liner-hud-then.png"))
+
+            page.click('[data-set-theme="now"]')
+            page.wait_for_function(
+                """() => !document.getElementById('music-now').paused
+                     && document.getElementById('music-now').currentTime > 0.2""",
+                timeout=5000)
+            page.wait_for_timeout(400)
+            now_t = page.evaluate("() => document.getElementById('music-now').currentTime")
+            check(page.evaluate(
+                """() => { const a = document.getElementById('music-now'),
+                                b = document.getElementById('music-then');
+                    return !a.paused && b.paused && a.currentTime > 0.2; }"""),
+                  f"music: back to Now resumes the same track mid-song ({now_t:.1f}s in)")
+            check(not page.eval_on_selector("#liner", "e => e.hidden"),
+                  "music: HUD follows the resumed room track")
+
+            page.click("#music-toggle")
+            page.wait_for_timeout(500)
+            check(mt.get_attribute("aria-pressed") == "false",
+                  "music: pressing again pauses")
+            check(page.evaluate(
+                """() => { const a = document.getElementById('music-now'),
+                                b = document.getElementById('music-then');
+                    return a.paused && b.paused; }"""),
+                  "music: both room tracks are stopped")
+            check(page.title().strip() == "Junior Thành",
+                  "music: document.title restored on pause")
+            check(page.eval_on_selector("#liner", "e => e.hidden"),
+                  "music: HUD hidden again on pause")
+
+            page.click("#music-toggle")
+            page.click("#music-toggle")
+            page.click("#music-toggle")
+            page.wait_for_timeout(1200)
+            consistent = page.evaluate(
+                """() => { const a = document.getElementById('music-now'),
+                                b = document.getElementById('music-then');
+                    const pressed =
+                        document.getElementById('music-toggle')
+                                .getAttribute('aria-pressed') === 'true';
+                    return pressed === (!a.paused || !b.paused); }""")
+            check(consistent, "music: rapid clicks leave aria-pressed matching audio")
+            if page.evaluate("() => [...document.querySelectorAll('audio')].some(a => !a.paused)"):
+                page.click("#music-toggle")
+                page.wait_for_timeout(400)
+
+        page.screenshot(path=str(OUT / "now-desktop.png"), full_page=True)
+        page.screenshot(path=str(OUT / "now-hero.png"))
+
+        page.click('[data-set-theme="then"]')
+        page.wait_for_timeout(350)
+        check(html_el.get_attribute("data-theme") == "then", "theme switches to then")
+        check(page.locator('[data-set-theme="then"]').get_attribute("aria-pressed") == "true",
+              "then button aria-pressed")
+        bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
+        check(bg == "rgb(11, 12, 14)", f"then canvas applied ({bg})")
+        then_accent = page.evaluate(
+            "getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()")
+        check(then_accent == "#FFA200", f"then accent token applied ({then_accent})")
+        then_footer = page.evaluate(
+            "getComputedStyle(document.querySelector('footer.site-footer')).backgroundColor")
+        check(then_footer == "rgb(6, 7, 10)", f"then footer wash applied ({then_footer})")
+        then_scrim = page.evaluate(
+            "getComputedStyle(document.querySelector('.hero__scrim')).backgroundImage")
+        check("rgba(6, 7, 9" in then_scrim,
+              f"then hero scrim tint applied ({then_scrim[:70]}...)")
+        page.screenshot(path=str(OUT / "then-desktop.png"), full_page=True)
+
+        page.click('[data-set-theme="now"]')
+        page.wait_for_timeout(350)
+        check(html_el.get_attribute("data-theme") == "now", "theme switches back to now")
+        now_bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
+        check(now_bg == "rgb(238, 243, 247)", f"now canvas applied ({now_bg})")
+        check(page.locator('[data-set-theme="now"]').get_attribute("aria-pressed") == "true",
+              "now button aria-pressed")
+        now_accent = page.evaluate(
+            "getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()")
+        check(now_accent == "#4292C6", f"now accent token applied ({now_accent})")
+        now_footer = page.evaluate(
+            "getComputedStyle(document.querySelector('footer.site-footer')).backgroundColor")
+        check(now_footer == "rgb(11, 27, 41)", f"now footer wash applied ({now_footer})")
+        now_scrim = page.evaluate(
+            "getComputedStyle(document.querySelector('.hero__scrim')).backgroundImage")
+        check("rgba(6, 19, 31" in now_scrim,
+              f"now hero scrim tint applied ({now_scrim[:70]}...)")
+        check(now_scrim != then_scrim,
+              "rooms: hero scrim is visually distinct per theme")
+        check(now_footer != then_footer,
+              "rooms: footer wash is visually distinct per theme")
+        check(now_accent != then_accent,
+              "rooms: accent token is visually distinct per theme")
+
+        music_session()
+        check(mt.get_attribute("aria-pressed") == "false",
+              "music: control is back in the paused state after the session")
+
+        page.evaluate("window.scrollTo(0,0)")
+        page.wait_for_timeout(300)
+        page.click("#music-toggle")
+        page.wait_for_function(
+            "() => !document.getElementById('music-now').paused", timeout=5000)
+        page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT / "liner-hud.png"))
+        hud = page.evaluate(
+            """() => {
+                const b = document.querySelector('.liner').getBoundingClientRect();
+                return { right: Math.round(b.right), visible: !document.getElementById('liner').hidden,
+                         scroll: document.documentElement.scrollWidth,
+                         client: document.documentElement.clientWidth,
+                         vw: window.innerWidth };
+            }""")
+        check(hud["visible"] and hud["right"] <= hud["vw"],
+              f"liner: HUD stays inside the viewport while playing "
+              f"(right {hud['right']}px of {hud['vw']}px)")
+        check(hud["scroll"] <= hud["client"] + 1,
+              f"liner: open HUD causes no horizontal scroll "
+              f"({hud['scroll']} vs {hud['client']})")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(200)
+        check(page.eval_on_selector("#liner", "e => e.hidden"),
+              "liner: Escape hides the HUD")
+
+        # one Escape must dismiss the mobile sheet, not the HUD underneath it
+        page.set_viewport_size({"width": 375, "height": 812})
+        page.wait_for_timeout(250)
+        page.click("#music-toggle")  # pause
+        page.wait_for_timeout(300)
+        page.click("#music-toggle")  # play again, which re-opens the HUD
+        page.wait_for_function(
+            "() => !document.getElementById('music-now').paused", timeout=5000)
+        page.wait_for_timeout(400)
+        page.click("#menu-toggle")
+        page.wait_for_timeout(200)
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(250)
+        check(page.locator("#menu-toggle").get_attribute("aria-expanded") == "false"
+              and not page.eval_on_selector("#liner", "e => e.hidden"),
+              "liner: Escape closes the sheet first and leaves the HUD open")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(250)
+        check(page.eval_on_selector("#liner", "e => e.hidden"),
+              "liner: a second Escape then hides the HUD")
+        page.set_viewport_size({"width": 1440, "height": 900})
+        page.wait_for_timeout(250)
+        page.click("#music-toggle")
+        page.wait_for_timeout(400)
         check(page.locator(".hero__plate").count() == 0,
               "hero: frosted plate removed")
         check(page.locator(".hero__badge").count() == 0,
@@ -430,6 +585,36 @@ def run():
         check(page.locator(".hero .facts").count() == 2,
               "hero: both fact lists kept (3 rows each)")
 
+        footer_text = page.eval_on_selector(
+            "footer.site-footer", "e => e.textContent.replace(/\\s+/g, ' ')")
+        check("Product created by" in footer_text,
+              "signature: footer carries the 'Product created by' credit")
+        check("V.T.Thanh Assistant" in footer_text,
+              "signature: footer carries the 'V.T.Thanh Assistant' credit")
+        liner_credit = page.eval_on_selector(
+            "#liner", "e => e.textContent.replace(/\\s+/g, ' ')")
+        check("Product created by" in liner_credit
+              and "V.T.Thanh Assistant" in liner_credit,
+              "signature: the liner HUD repeats the attribution credit")
+        seal = page.locator(".signature__seal")
+        check(seal.count() == 1, "signature: seal SVG present in the footer")
+        check(page.eval_on_selector(
+            ".signature__seal text", "e => (e.textContent || '').trim() !== ''"),
+              f"signature: seal contains a <text> node "
+              f"({page.eval_on_selector('.signature__seal text', 'e => e.textContent')!r})")
+        caps = page.evaluate(
+            """() => {
+                const c = document.getElementById('capsule');
+                return { present: !!c,
+                         visible: !!(c.offsetParent || c.getClientRects().length),
+                         hiddenAttr: c.hasAttribute('hidden'),
+                         date: (document.getElementById('capsule-date').textContent || '').trim() };
+            }""")
+        check(caps["present"] and caps["visible"] and not caps["hiddenAttr"],
+              "signature: first-visit capsule is unhidden by JS")
+        check(bool(re.match(r"^\d{2}/\d{2}/\d{4}$", caps["date"])),
+              f"signature: capsule date matches dd/mm/yyyy ({caps['date']!r})")
+
         rm = browser.new_context(viewport={"width": 1280, "height": 900},
                                  reduced_motion="reduce")
         rp = rm.new_page()
@@ -455,6 +640,14 @@ def run():
               "no-JS: footer navigation present as a fallback")
         check(np.locator(".hero__title").is_visible(),
               "no-JS: hero renders (poster, not video)")
+        check(np.eval_on_selector("#capsule", "e => e.hasAttribute('hidden')"),
+              "no-JS: #capsule ships hidden in the raw HTML")
+        check('id="capsule"' in np.content(),
+              "no-JS: #capsule present in the served markup")
+        check(np.eval_on_selector("#capsule", "e => e.hidden"),
+              "no-JS: first-visit capsule stays hidden without scripting")
+        check(np.eval_on_selector("#liner", "e => e.hidden"),
+              "no-JS: liner notes HUD stays hidden without scripting")
         nj.close()
 
         for w in (320, 360, 375):

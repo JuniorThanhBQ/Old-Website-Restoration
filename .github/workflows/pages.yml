@@ -128,7 +128,7 @@ jobs:
                    assets/favicon.ico site.webmanifest assets/img/favicon-32.png \
                    assets/img/icon-192.png assets/img/icon-512.png \
                    assets/img/apple-touch-icon.png \
-                   assets/media/as-it-was-1.mp3 assets/media/as-it-was-2.mp3; do
+                   assets/media/as-it-was.mp3 assets/media/everything-i-wanted.mp3; do
             c=$(curl -s -o /dev/null -w '%{http_code}' "${url}${p}")
             echo "  $p -> $c"
             test "$c" = "200" || { echo "::error::$p returned $c"; exit 1; }

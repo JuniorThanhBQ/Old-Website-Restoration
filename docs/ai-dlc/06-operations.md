@@ -47,10 +47,26 @@ from the shipped HTML and fails if any glyph would be missing. **If you add copy
 Without it, a new Vietnamese character could silently render as tofu, because the fonts
 are subset deliberately.
 
+The audio is rebuilt by the same `build-assets.py`: `assets-src/song.mp3` →
+`assets/media/as-it-was.mp3` (Then room) and `assets-src/song2.mp3` →
+`assets/media/everything-i-wanted.mp3` (Now room), metadata stripped at 96 kbps. The workflow's
+smoke step asserts both files return 200, so renaming one without updating the other fails
+the deploy rather than shipping a silent player.
+
+## Where the theme lives
+
+Three places, all of which must agree when a palette changes:
+
+1. `assets/css/style.css` — the `[data-theme="now"|"then"]` token blocks. Everything visual reads
+   from these; there are no component-level colour literals outside the print and 404 blocks.
+2. `assets/js/main.js` — `applyTheme()` writes `<meta name="theme-color">` (`#EEF3F7` / `#0B0C0E`).
+3. `<meta name="theme-color">` in `index.html`, `404.html` and `site.webmanifest` — the value a
+   browser uses before the script runs.
+
 ## Verify
 
 ```bash
-python3 tools/qa.py               # 73 checks; non-zero exit on failure
+python3 tools/qa.py               # 156 checks; non-zero exit on failure
 ```
 
 Local QA needs Playwright once: `pip install playwright && python3 -m playwright install chromium`.
