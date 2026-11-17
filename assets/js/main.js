@@ -1,12 +1,9 @@
-/* Junior Thành — progressive enhancement only.
-   Every feature below degrades to a fully working, readable page. */
 (function () {
   "use strict";
 
   var root = document.documentElement;
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  /* ── theme ─────────────────────────────────────────────── */
   var THEME_KEY = "jth-theme";
   var themeButtons = Array.prototype.slice.call(
     document.querySelectorAll("[data-set-theme]")
@@ -25,7 +22,6 @@
     try {
       window.localStorage.setItem(key, value);
     } catch (err) {
-      /* private mode / quota — ignore */
     }
   }
 
@@ -51,7 +47,6 @@
     });
   });
 
-  /* ── clock ─────────────────────────────────────────────── */
   var clocks = [
     { el: document.getElementById("hero-clock"), time: true },
     { el: document.getElementById("footer-clock"), time: true }
@@ -87,13 +82,11 @@
     window.setInterval(tick, 1000);
   }
 
-  /* ── year ──────────────────────────────────────────────── */
   var yearEl = document.getElementById("year");
   if (yearEl) {
     yearEl.textContent = String(new Date().getFullYear());
   }
 
-  /* ── mobile menu ───────────────────────────────────────── */
   var menuToggle = document.getElementById("menu-toggle");
   var mobileMenu = document.getElementById("mobile-menu");
 
@@ -123,7 +116,6 @@
       menuToggle.focus();
     });
 
-    /* focus containment while the sheet is open */
     mobileMenu.addEventListener("keydown", function (event) {
       if (event.key !== "Tab") {
         return;
@@ -150,7 +142,6 @@
     });
   }
 
-  /* ── header stuck state ────────────────────────────────── */
   var header = document.getElementById("site-header");
   if (header) {
     var updateHeader = function () {
@@ -160,7 +151,6 @@
     window.addEventListener("scroll", updateHeader, { passive: true });
   }
 
-  /* ── scroll progress ───────────────────────────────────── */
   var progressBar = document.getElementById("scroll-progress-bar");
   if (progressBar) {
     var updateProgress = function () {
@@ -173,7 +163,6 @@
     window.addEventListener("resize", updateProgress);
   }
 
-  /* ── active nav ────────────────────────────────────────── */
   var navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav__link"));
   var sections = navLinks
     .map(function (link) {
@@ -206,7 +195,6 @@
     sections.forEach(function (section) { navObserver.observe(section); });
   }
 
-  /* ── reveal on scroll ──────────────────────────────────── */
   var revealTargets = Array.prototype.slice.call(
     document.querySelectorAll(
       ".section-head, .about__prose > *, .quote-card, .portrait, .role-card, " +
@@ -235,7 +223,6 @@
     revealTargets.forEach(function (el) { el.classList.add("is-in"); });
   }
 
-  /* ── FAQ accordion ─────────────────────────────────────── */
   var triggers = Array.prototype.slice.call(document.querySelectorAll(".faq-item__trigger"));
 
   triggers.forEach(function (trigger) {
@@ -259,7 +246,6 @@
     });
   });
 
-  /* ── hero video (lazy, motion- and data-aware) ─────────── */
   var video = document.getElementById("hero-video");
   var connection = navigator.connection || {};
   var saveData = connection.saveData === true;
@@ -288,8 +274,106 @@
     var play = video.play();
     if (play && typeof play.catch === "function") {
       play.catch(function () {
-        /* autoplay blocked: the poster is the design, nothing to fix */
       });
     }
+  }
+
+  var musicBtn = document.getElementById("music-toggle");
+  var tracks = [
+    document.getElementById("music-a"),
+    document.getElementById("music-b")
+  ].filter(Boolean);
+
+  if (musicBtn && tracks.length) {
+    var pageTitle = document.title;
+    var trackIndex = 0;
+    var titleTimer = null;
+    var wantPlaying = false;
+    var attempt = 0;
+
+    tracks.forEach(function (el) { el.volume = 0.42; });
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+    function stamp(secs) {
+      if (!isFinite(secs) || secs < 0) return "0:00";
+      return Math.floor(secs / 60) + ":" + pad2(Math.floor(secs % 60));
+    }
+
+    function current() { return tracks[trackIndex]; }
+    function anyPlaying() {
+      return tracks.some(function (el) { return !el.paused && !el.ended; });
+    }
+
+    function ensureSrc(el) {
+      if (!el.getAttribute("src") && el.dataset.src) el.src = el.dataset.src;
+    }
+
+    function paintTitle() {
+      var el = current();
+      document.title = stamp(el.currentTime) + " / " + stamp(el.duration);
+    }
+
+    function syncTitle() {
+      if (anyPlaying()) {
+        paintTitle();
+        if (titleTimer === null) {
+          titleTimer = window.setInterval(paintTitle, 1000);
+        }
+      } else {
+        if (titleTimer !== null) {
+          window.clearInterval(titleTimer);
+          titleTimer = null;
+        }
+        document.title = pageTitle;
+      }
+    }
+
+    function sync() {
+      setPressed(wantPlaying || anyPlaying());
+      syncTitle();
+    }
+
+    function setPressed(on) {
+      musicBtn.setAttribute("aria-pressed", String(on));
+      musicBtn.setAttribute("aria-label", on ? "Tắt nhạc nền" : "Bật nhạc nền");
+    }
+
+    function start() {
+      var el = current();
+      var mine = ++attempt;
+      wantPlaying = true;
+      ensureSrc(el);
+      tracks.forEach(function (other) { if (other !== el) other.pause(); });
+      var started = el.play();
+      if (started && typeof started.catch === "function") {
+        started.catch(function () {
+          if (mine !== attempt) return;
+          wantPlaying = false;
+          sync();
+        });
+      }
+      sync();
+    }
+
+    function stop() {
+      wantPlaying = false;
+      attempt++;
+      tracks.forEach(function (el) { el.pause(); });
+      sync();
+    }
+
+    tracks.forEach(function (el, i) {
+      el.addEventListener("playing", sync);
+      el.addEventListener("pause", sync);
+      el.addEventListener("ended", function () {
+        if (!wantPlaying) return;
+        trackIndex = (i + 1) % tracks.length;
+        start();
+      });
+    });
+
+    musicBtn.addEventListener("click", function () {
+      if (wantPlaying) stop(); else start();
+    });
   }
 })();

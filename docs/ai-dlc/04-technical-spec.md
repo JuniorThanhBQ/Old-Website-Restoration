@@ -24,10 +24,11 @@
 │   ├── css/style.css          # single stylesheet, design tokens first
 │   ├── css/fonts.css          # generated @font-face block
 │   ├── js/main.js             # progressive enhancement only
-│   ├── favicon.svg
+│   ├── favicon.ico
 │   ├── fonts/                 # 3 glyph-subsetted woff2 (107 KB total)
 │   ├── img/                   # portrait (3 widths × avif/webp), poster, favicons, logo, og
 │   └── media/hero.mp4 + .webm # re-encoded, lazily attached
+│   └── media/as-it-was-1.mp3  # the original two songs, 96 kbps, opt-in playback
 ├── assets-src/                # original untouched media (provenance, not shipped)
 ├── tools/build-assets.py      # reproducible image/video pipeline
 ├── tools/build-fonts.py       # reproducible font pipeline (+ --check coverage gate)
@@ -46,10 +47,11 @@
 | `img/portrait-{480,780,1120}.webp` + `.avif` | from `assets-src/me1.webp`, quality tuned, `aspect 3:4` crop-free resize |
 | `img/hero-poster.{avif,webp}` | frame from `train.mp4`, 1280×720 — avif ~37 KB, webp ~55 KB, plus a base64 LQIP |
 | `img/ou-logo.webp` | from `assets-src/ou-logo.webp`, max 320px wide (footer use) |
-| `img/favicon.svg` + `favicon-32.png` + `apple-touch-icon.png` | generated from the `JT` monogram (SVG source of truth) |
+| `favicon.ico` + `img/favicon-{16,32}.png`, `img/icon-{192,512}.png`, `img/apple-touch-icon.png` | **Re-cut from `assets-src/icon.png`** — the original site's own `/icon.png`, byte-for-byte, not a redrawn mark. One LANCZOS resize per size; the two manifest sizes are palette-quantised to keep them small. `apple-touch-icon` is composited onto the icon's own dark background because iOS ignores alpha. |
 | `img/og.png` | 1200×630 social card composed from tokens (Pillow) |
 | `media/hero.mp4` | `train.mp4` cut to a 12 s silent loop, 1280×720, `+faststart` → **293 KB** |
 | `media/hero.webm` | VP9 sibling, served first via `<source>` → ~300 KB |
+| `media/as-it-was-{1,2}.mp3` | the original `song.mp3`/`song2.mp3`, metadata stripped, 96 kbps stereo, 44.1 kHz → 6.0 MB for both |
 
 Every output must keep the visual content of the source (no re-cropping of the portrait's subject).
 
@@ -121,7 +123,7 @@ Never use `innerHTML` with variable data; use `textContent`/`classList`/`setAttr
 
 | # | Deviation | Reason |
 |---|---|---|
-| D1 | Background-music player removed (`song.mp3`, `song2.mp3`) | Third-party commercial recordings; licensing risk, and autoplay audio violates the UX bar. Owner can re-add their own licensed files. |
+| D1 | **Restored** at the owner's request: background-music player and the original favicon (was: both omitted) | The owner asked for their own page's play button and icon back. Audio is the owner's own content, re-encoded to 96 kbps MP3 (6.0 MB for both tracks) and never fetched until the visitor presses play — so the licensing and autoplay concerns that motivated the first pass's removal no longer apply. |
 | D2 | Next.js → hand-written HTML/CSS/JS | No build/runtime on Pages; a 2022 framework site cannot hit the performance budget or the "still opens in ten years" goal. |
 | D3 | FAQ answer 03 still says "Next.js" | Verbatim historical content; see `02-content-inventory.md`. |
 | D4 | Anchor ids romanised (`#gioi-thieu` instead of `#about`) with the old names kept as alias `id`s | Readable Vietnamese URLs; both resolve. Actually simpler: keep **both** — primary is romanised, and `#about`/`#role`/`#goal`/`#FAQ` remain as hidden alias anchors for old inbound links. |

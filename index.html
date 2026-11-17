@@ -30,8 +30,10 @@
 <meta name="twitter:description" content="Trang nhà của Junior Thành. Sinh viên năm hai đại học Mở TP.Hồ Chí Minh">
 <meta name="twitter:image" content="https://juniorthanhbq.github.io/Old-Website-Restoration/assets/img/og.png">
 
-<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon.ico" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" href="./assets/img/favicon-16.png" sizes="16x16" type="image/png">
 <link rel="icon" href="./assets/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="./assets/img/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="./assets/img/apple-touch-icon.png">
 <link rel="manifest" href="./site.webmanifest">
 
@@ -64,6 +66,10 @@
     </nav>
 
     <div class="header-tools">
+      <button type="button" class="music-toggle" id="music-toggle" aria-pressed="false" aria-label="Bật nhạc nền">
+        <svg class="music-toggle__icon music-toggle__icon--play" viewBox="0 0 384 512" width="13" height="13" aria-hidden="true" focusable="false"><path fill="currentColor" d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80L0 432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>
+        <svg class="music-toggle__icon music-toggle__icon--pause" viewBox="0 0 320 512" width="13" height="13" aria-hidden="true" focusable="false"><path fill="currentColor" d="M48 64C21.5 64 0 85.5 0 112L0 400c0 26.5 21.5 48 48 48l32 0c26.5 0 48-21.5 48-48l0-288c0-26.5-21.5-48-48-48L48 64zm192 0c-26.5 0-48 21.5-48 48l0 288c0 26.5 21.5 48 48 48l32 0c26.5 0 48-21.5 48-48l0-288c0-26.5-21.5-48-48-48l-32 0z"/></svg>
+      </button>
       <div class="theme-switch" role="group" aria-label="Giao diện">
         <button type="button" class="theme-switch__btn" data-set-theme="now" aria-pressed="true" aria-label="Now — giao diện hiện tại">Now</button>
         <button type="button" class="theme-switch__btn" data-set-theme="then" aria-pressed="false" aria-label="Then — giao diện năm 2022">Then</button>
@@ -88,9 +94,11 @@
   </div>
 </header>
 
+<audio id="music-a" preload="none" data-src="./assets/media/as-it-was-1.mp3"></audio>
+<audio id="music-b" preload="none" data-src="./assets/media/as-it-was-2.mp3"></audio>
+
 <main id="main">
 
-  <!-- ───────────────────────────────────────────── hero ── -->
   <section class="hero" id="trang-chu" aria-labelledby="hero-title">
     <div class="hero__media" aria-hidden="true">
       <img class="hero__poster" src="./assets/img/hero-poster.webp" width="1280" height="720"
@@ -102,60 +110,51 @@
       <div class="hero__grid-ticks"></div>
     </div>
 
-    <div class="hero__plate glass">
-      <div class="hero__plate-head">
-        <p class="eyebrow">HCMC-OU</p>
-        <h1 class="hero__title" id="hero-title"><span>Junior</span> <span class="hero__title-accent">Thành</span></h1>
+    <div class="hero__layout">
+      <div class="hero__name">
+        <h1 class="hero__title" id="hero-title">Junior <span class="hero__title-accent">Thành</span></h1>
         <p class="hero__byline">Văn Trung Thành - K23 <sup>TM</sup></p>
-        <p class="hero__standfirst">Sinh viên năm hai tại trường đại học Mở TP.HCM</p>
-        <p class="hero__hours">Thời gian làm việc: 9h30-23h</p>
       </div>
 
-      <figure class="hero__motto">
-        <figcaption class="label">Châm ngôn</figcaption>
-        <blockquote>
-          <p>"Gió đẩy chiều nào thì ta theo chiều đó. Miễn đến cuối con đường ta được là chính mình thì đó là điều chân quý nhất rồi."</p>
-        </blockquote>
-      </figure>
+      <hr class="hero__rule">
 
-      <p class="clock-chip">
-        <span class="clock-chip__label">Thời gian:</span>
-        <time class="clock-chip__value" id="hero-clock" datetime="">--:--:--</time>
-      </p>
+      <div class="hero__columns">
+        <div class="hero__col">
+          <h2 class="hero__col-title">HCMC-OU</h2>
+          <p class="hero__col-body">Sinh viên năm hai tại trường đại học Mở TP.HCM</p>
+          <p class="hero__hours">Thời gian làm việc: 9h30-23h</p>
+        </div>
 
-      <div class="hero__facts">
-        <dl class="facts">
-          <div class="facts__row"><dt>Ngành học</dt><dd>Công nghệ thông tin</dd></div>
-          <div class="facts__row"><dt>Chuyên ngành</dt><dd>ATTT &amp; ĐGHT</dd></div>
-          <div class="facts__row"><dt>Chứng chỉ</dt><dd>Level B1 Certificate</dd></div>
-        </dl>
-        <dl class="facts">
-          <div class="facts__row"><dt>Sở thích</dt><dd>Nghe nhạc, Coding</dd></div>
-          <div class="facts__row"><dt>Trình độ</dt><dd>HTML,CSS, JavaScript</dd></div>
-          <div class="facts__row"><dt>Khác</dt><dd>Sẵn sàng hỗ trợ</dd></div>
-        </dl>
+        <div class="hero__col">
+          <h2 class="hero__col-title">Châm ngôn</h2>
+          <blockquote class="hero__motto">
+            <p>"Gió đẩy chiều nào thì ta theo chiều đó. Miễn đến cuối con đường ta được là chính mình thì đó là điều chân quý nhất rồi."</p>
+          </blockquote>
+          <p class="clock-chip">
+            <span class="clock-chip__label">Thời gian:</span>
+            <time class="clock-chip__value" id="hero-clock" datetime="">--:--:--</time>
+          </p>
+        </div>
+
+        <div class="hero__col">
+          <dl class="facts">
+            <div class="facts__row"><dt>Ngành học</dt><dd>Công nghệ thông tin</dd></div>
+            <div class="facts__row"><dt>Chuyên ngành</dt><dd>ATTT &amp; ĐGHT</dd></div>
+            <div class="facts__row"><dt>Chứng chỉ</dt><dd>Level B1 Certificate</dd></div>
+          </dl>
+        </div>
+
+        <div class="hero__col">
+          <dl class="facts">
+            <div class="facts__row"><dt>Sở thích</dt><dd>Nghe nhạc, Coding</dd></div>
+            <div class="facts__row"><dt>Trình độ</dt><dd>HTML,CSS, JavaScript</dd></div>
+            <div class="facts__row"><dt>Khác</dt><dd>Sẵn sàng hỗ trợ</dd></div>
+          </dl>
+        </div>
       </div>
     </div>
-
-    <div class="hero__badge" aria-hidden="true">
-      <svg viewBox="0 0 120 120" class="hero__badge-ring">
-        <defs>
-          <path id="badge-path" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"></path>
-        </defs>
-        <text class="hero__badge-text">
-          <textPath href="#badge-path" startOffset="0">JUNIOR THÀNH · AS IT WAS · 2022 — 2026 · </textPath>
-        </text>
-      </svg>
-      <span class="hero__badge-core"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v14m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </div>
-
-    <a class="hero__scroll" href="#gioi-thieu">
-      <span>Cuộn xuống</span>
-      <span class="hero__scroll-line" aria-hidden="true"></span>
-    </a>
   </section>
 
-  <!-- ──────────────────────────────────────────── about ── -->
   <section class="about section" id="gioi-thieu" aria-labelledby="about-title">
     <span class="anchor-alias" id="about" aria-hidden="true"></span>
     <div class="shell">
@@ -203,7 +202,6 @@
     </div>
   </section>
 
-  <!-- ────────────────────────────────────── interlude 1 ── -->
   <div class="interlude">
     <div class="shell">
       <blockquote class="interlude__quote">
@@ -213,7 +211,6 @@
     </div>
   </div>
 
-  <!-- ──────────────────────────────────────────── roles ── -->
   <section class="roles section" id="nghiep-vu" aria-labelledby="roles-title">
     <span class="anchor-alias" id="role" aria-hidden="true"></span>
     <div class="shell">
@@ -255,7 +252,6 @@
     </div>
   </section>
 
-  <!-- ────────────────────────────────────── interlude 2 ── -->
   <div class="interlude interlude--alt">
     <div class="shell">
       <blockquote class="interlude__quote">
@@ -265,7 +261,6 @@
     </div>
   </div>
 
-  <!-- ──────────────────────────────────────────── goals ── -->
   <section class="goals section" id="muc-tieu" aria-labelledby="goals-title">
     <span class="anchor-alias" id="goal" aria-hidden="true"></span>
     <div class="shell">
@@ -296,7 +291,6 @@
     </div>
   </section>
 
-  <!-- ────────────────────────────────────────────── faq ── -->
   <section class="faq section" id="faq" aria-labelledby="faq-title">
     <span class="anchor-alias" id="FAQ" aria-hidden="true"></span>
     <div class="shell">
@@ -519,9 +513,9 @@
        JS. On mobile it is already display:none via CSS, where the footer nav is
        the fallback — hiding it globally would strip navigation from desktop
        users whose JS failed to load. */
-    .theme-switch,.menu-toggle{display:none}
+    .theme-switch,.menu-toggle,.music-toggle{display:none}
     .reveal{opacity:1;transform:none}
-    .hero__badge,.marquee{display:none}
+    .marquee{display:none}
   </style>
 </noscript>
 </body>

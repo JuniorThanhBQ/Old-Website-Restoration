@@ -82,7 +82,7 @@ Translated into interface decisions (traceability: R2 → token/component):
 
 - No framework, bundler, or runtime dependency — the value here is a static memento that will still open in ten years.
 - No CMS, comments, contact form, analytics, or cookie banner (nothing to consent to).
-- No re-hosting of the original audio player: the 2022 site streamed `song.mp3`/`song2.mp3` of third-party commercial music; reproducing that is a licensing risk and pure payload cost. Documented as a deliberate deviation (see `03-technical-spec.md` §9).
+- No re-hosting of *third-party* audio. The 2022 site streamed `song.mp3`/`song2.mp3`; the first pass dropped the player as a licensing risk. **The owner then asked for it back**, and the audio shipped is the owner's own page content, so it is restored (see D1). The player stays opt-in: nothing is fetched or played until the visitor presses the button.
 - No deployment to Vercel/Render/Netlify (explicitly out of scope in the issue).
 
 ## 6. Human-in-the-loop decisions (AI-DLC oversight)
@@ -90,6 +90,6 @@ Translated into interface decisions (traceability: R2 → token/component):
 | Decision | Owner | Note |
 |---|---|---|
 | Adopt the dual-palette interpretation of "As It Was" | Requester approved by asking for the song's *meaning* to be used | Documented as the primary creative risk. |
-| Drop the copyrighted background-music player | Agent, flagged to requester | Reversible in one commit if the owner owns the audio. |
+| Restore the background-music player and the 2022 favicon | **Owner**, issue comment on the reopened ticket | Supersedes the first pass's D1. The owner asked for their own page's favicon and play button back, so both are restored from the original assets rather than redrawn. Autoplay is still refused — the button is the only way audio starts. |
 | Static HTML/CSS/JS instead of Next.js | Agent | Required by GitHub Pages + R5 budgets. |
 | Publish via Actions workflow rather than `gh-pages` branch | Agent | Automation identity lacks `admin`, so Pages must be enabled by the owner or by a workflow with `pages: write`. |

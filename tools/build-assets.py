@@ -20,11 +20,9 @@ def ffmpeg():
         return "ffmpeg"
 
 
-# ---------------------------------------------------------------- portrait
 def portrait():
     src = Image.open(SRC / "me1.webp").convert("RGB")
     w, h = src.size
-    # 3:4 crop centred on the horizontal middle, anchored slightly above centre
     target = 3 / 4
     new_w, new_h = (w, int(w / target)) if w / h > target else (int(h * target), h)
     left, top = (w - new_w) // 2, max(0, int((h - new_h) * 0.42))
@@ -34,12 +32,10 @@ def portrait():
         img = cropped.resize((width, int(width / target)), Image.LANCZOS)
         img.save(IMG / f"portrait-{width}.webp", "WEBP", quality=82, method=6)
         img.save(IMG / f"portrait-{width}.avif", "AVIF", quality=55)
-    # LQIP placeholder (inline as a data URI in CSS)
     tiny = cropped.resize((24, 32), Image.LANCZOS)
     tiny.save(IMG / "portrait-lqip.webp", "WEBP", quality=40)
 
 
-# ---------------------------------------------------------------- hero poster
 def poster():
     exe = ffmpeg()
     for t, name in (("6", "hero-poster.webp"),):
@@ -55,10 +51,19 @@ def poster():
     (IMG / "_poster.png").unlink()
 
 
-# ---------------------------------------------------------------- hero video
+def music():
+    """The 2022 player's two songs, re-encoded for streaming. Provenance stays
+    in assets-src/song.mp3 + song2.mp3; these are the shipped derivatives."""
+    exe = ffmpeg()
+    for src, dest in (("song.mp3", "as-it-was-1.mp3"), ("song2.mp3", "as-it-was-2.mp3")):
+        subprocess.run(
+            [exe, "-i", str(SRC / src), "-map_metadata", "-1",
+             "-ac", "2", "-ar", "44100", "-b:a", "96k", "-y", str(MEDIA / dest)],
+            check=True, capture_output=True)
+
+
 def hero_video():
     exe = ffmpeg()
-    # 12 s seamless-ish loop taken from a quiet stretch, no audio, faststart
     base = [exe, "-ss", "3", "-t", "12", "-i", str(SRC / "train.mp4"),
             "-an", "-vf", "scale=1280:-2:flags=lanczos", "-r", "25",
             "-movflags", "+faststart"]
@@ -70,34 +75,25 @@ def hero_video():
                    check=True, capture_output=True)
 
 
-# ---------------------------------------------------------------- logo + monogram
-def monogram(size=64, radius=14, bg="#14171C", fg="#F4F0E8", accent="#C3341F"):
-    im = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    s = size * 4
-    d.rounded_rectangle((0, 0, s - 1, s - 1), radius=radius * 4, fill=bg)
-    d.rectangle((0, 0, s - 1, int(s * 0.055)), fill=accent)
-    try:
-        f = ImageFont.truetype(str(pathlib.Path("/usr/share/fonts") / "truetype/dejavu/DejaVuSerif-Bold.ttf"), int(s * 0.46))
-    except OSError:
-        f = ImageFont.load_default()
-    text = "JT"
-    l, t, r, b = d.textbbox((0, 0), text, font=f)
-    d.text(((s - (r - l)) / 2 - l, (s - (b - t)) / 2 - t - s * 0.02), text, font=f, fill=fg)
-    return im
-
-
 def icons():
-    monogram(64).resize((32, 32), Image.LANCZOS).save(IMG / "favicon-32.png")
-    monogram(180).resize((180, 180), Image.LANCZOS).save(IMG / "apple-touch-icon.png")
-    monogram(192).resize((192, 192), Image.LANCZOS).save(IMG / "icon-192.png")
-    monogram(512).resize((512, 512), Image.LANCZOS).save(IMG / "icon-512.png")
-    (OUT / "favicon.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="JT">'
-        '<rect width="64" height="64" rx="14" fill="#14171C"/>'
-        '<rect width="64" height="3.6" rx="1" fill="#C3341F"/>'
-        '<text x="32" y="44" text-anchor="middle" font-family="Georgia,serif" font-size="30" '
-        'font-weight="700" fill="#F4F0E8">JT</text></svg>\n')
+    """The 2022 favicon, restored. assets-src/icon.png is byte-identical to the
+    original site's /icon.png, so every size is cut straight from it — no
+    redrawn replacement, which is what the owner asked for."""
+    src = Image.open(SRC / "icon.png").convert("RGBA")
+    (src.resize((32, 32), Image.LANCZOS).save(IMG / "favicon-32.png", "PNG", optimize=True))
+    for size, name in ((192, "icon-192.png"), (512, "icon-512.png")):
+        (src.resize((size, size), Image.LANCZOS)
+            .quantize(colors=192, method=Image.FASTOCTREE)
+            .save(IMG / name, "PNG", optimize=True))
+    src.resize((16, 16), Image.LANCZOS).save(IMG / "favicon-16.png", "PNG", optimize=True)
+
+    plate = Image.new("RGBA", src.size, (21, 23, 23, 255))
+    plate.alpha_composite(src)
+    plate.convert("RGB").resize((180, 180), Image.LANCZOS).save(
+        IMG / "apple-touch-icon.png", "PNG", optimize=True)
+
+    src.resize((256, 256), Image.LANCZOS).save(
+        OUT / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
 
 
 def logo():
@@ -107,7 +103,6 @@ def logo():
     src.save(IMG / "ou-logo.webp", "WEBP", quality=88, method=6)
 
 
-# ---------------------------------------------------------------- og card
 def og():
     W, H = 1200, 630
     im = Image.new("RGB", (W, H), "#F4F0E8")
@@ -130,7 +125,7 @@ def og():
 
 
 if __name__ == "__main__":
-    steps = [portrait, poster, hero_video, icons, logo, og]
+    steps = [portrait, poster, hero_video, music, icons, logo, og]
     for step in steps:
         step()
         print("ok:", step.__name__)
