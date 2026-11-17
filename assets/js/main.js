@@ -5,7 +5,9 @@
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   var THEME_KEY = "jth-theme";
+  var ROOM_PARAM = "room";
   var syncRoom = null;
+  var resetShareLabel = null;
   var themeButtons = Array.prototype.slice.call(
     document.querySelectorAll("[data-set-theme]")
   );
@@ -41,13 +43,45 @@
 
   var storedTheme = readStored(THEME_KEY);
   var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  applyTheme(storedTheme === "then" || storedTheme === "now" ? storedTheme : prefersDark ? "then" : "now");
+
+  // a room can be sent to someone: ?room=then / ?room=now outranks the saved choice
+  function roomFromUrl() {
+    var room = null;
+    try {
+      room = new URLSearchParams(window.location.search).get(ROOM_PARAM);
+    } catch (err) {
+    }
+    return room === "then" || room === "now" ? room : null;
+  }
+
+  function roomUrl(theme) {
+    try {
+      var url = new URL(window.location.href);
+      url.searchParams.set(ROOM_PARAM, theme);
+      return url.toString();
+    } catch (err) {
+      return window.location.href;
+    }
+  }
+
+  function reflectRoomInUrl(theme) {
+    if (!window.history || typeof window.history.replaceState !== "function") return;
+    try {
+      window.history.replaceState(null, "", roomUrl(theme));
+    } catch (err) {
+    }
+  }
+
+  applyTheme(roomFromUrl() ||
+    (storedTheme === "then" || storedTheme === "now" ? storedTheme : prefersDark ? "then" : "now"));
 
   themeButtons.forEach(function (btn) {
     btn.addEventListener("click", function () {
       var next = btn.dataset.setTheme;
       applyTheme(next);
       store(THEME_KEY, next);
+      reflectRoomInUrl(next);
+      if (typeof resetShareLabel === "function") resetShareLabel();
     });
   });
 
@@ -566,5 +600,30 @@
     });
 
     activeKey = currentKey();
+  }
+
+  var shareBtn = document.getElementById("liner-share");
+  var shareLabel = document.getElementById("liner-share-text");
+  var SHARE_IDLE = "Sao chép liên kết phòng này";
+  if (shareBtn && shareLabel) {
+    resetShareLabel = function () {
+      shareLabel.textContent = SHARE_IDLE;
+    };
+    shareBtn.addEventListener("click", function () {
+      var theme = root.getAttribute("data-theme") === "then" ? "then" : "now";
+      var link = roomUrl(theme);
+      // without the Clipboard API the address bar is the fallback, so put the room there
+      var fallback = function () {
+        reflectRoomInUrl(theme);
+        shareLabel.textContent = "Liên kết đã hiện ở thanh địa chỉ";
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(function () {
+          shareLabel.textContent = "Đã sao chép liên kết phòng này";
+        }, fallback);
+      } else {
+        fallback();
+      }
+    });
   }
 })();

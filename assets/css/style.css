@@ -1219,6 +1219,15 @@
     color: var(--ink-soft);
   }
   .liner__credit span { color: var(--ink); }
+  .liner__share {
+    margin-block-start: var(--sp-2); padding: 0;
+    border: 0; background: none; cursor: pointer; text-align: start;
+    font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.06em;
+    color: var(--accent-text);
+    text-decoration: underline; text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  .liner__share:hover { color: var(--ink); }
 
   .signature { display: flex; align-items: center; gap: var(--sp-3); }
   .signature__seal { flex: none; width: 2.7rem; height: 2.7rem; color: var(--accent); }

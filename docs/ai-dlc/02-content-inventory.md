@@ -124,6 +124,9 @@ and asserted by `tools/qa.py`:
 | Liner HUD, Now room | `everything i wanted` / `Billie Eilish` |
 | Liner HUD, Then room | `As It Was` / `Harry Styles` |
 | Liner HUD credit | `Product created by V.T.Thanh Assistant.` |
+| Liner HUD share, idle | `Sao chép liên kết phòng này` |
+| Liner HUD share, copied | `Đã sao chép liên kết phòng này` |
+| Liner HUD share, no Clipboard API | `Liên kết đã hiện ở thanh địa chỉ` |
 | Footer seal | `V.T.T.A` |
 | Footer credit | `Product created by V.T.Thanh Assistant.` |
 | Footer capsule | `Lần đầu ghé thăm:` + `dd/mm/yyyy` + `· căn phòng này nhớ bạn` |

@@ -46,6 +46,12 @@ fallback when the analyser is unavailable, and static bars under `prefers-reduce
 and the credit. Switching rooms mid-song pauses one track and resumes the other exactly
 where it stopped — each room remembers its own position. `Escape` dismisses the card.
 
+**Rooms are addresses.** Each room can be sent to someone: `/…/?room=then` opens the past,
+`/?room=now` the present, and picking a room writes the parameter straight into the URL with
+`replaceState` — no history spam, no questions. The card's share button copies that address
+and confirms it; where the Clipboard API is unavailable it puts the room in the address bar
+instead and says so.
+
 **The signature.** The footer carries a monogram seal (`V.T.T.A`) and the line
 **`Product created by V.T.Thanh Assistant.`**, repeated inside the liner card and declared in
 `<meta name="generator">`. The seal's dashed ring turns slowly, and stops when motion is
@@ -81,7 +87,7 @@ Measured, not asserted — full evidence in [`docs/ai-dlc/05-verification.md`](d
 | Layout shift | **0** |
 | axe-core (WCAG 2.1 AA, both themes, desktop + mobile) | **0 violations** |
 | Contrast, pixel-sampled on rendered backgrounds (19 text pairs × 2 rooms) | **0 below AA** |
-| Functional checks (`tools/qa.py`) | **156 / 156** |
+| Functional checks (`tools/qa.py`) | **163 / 163** |
 | Third-party runtime requests | **zero** — fonts self-hosted and subsetted to 164 glyphs (107 KB) |
 
 ## Structure
@@ -99,7 +105,7 @@ assets/media/               hero.mp4 + hero.webm, 12 s silent loop, lazily attac
 assets-src/                 original 2022 media, untouched — provenance, not shipped
 tools/build-assets.py       reproducible image/video/audio/favicon pipeline
 tools/build-fonts.py        reproducible font pipeline (+ --check coverage gate)
-tools/qa.py                 156-check verification sweep
+tools/qa.py                 163-check verification sweep
 docs/ai-dlc/                intent → content → design → technical → verification → operations
 ```
 

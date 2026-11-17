@@ -7,7 +7,7 @@ Reproduce with:
 
 ```bash
 python3 tools/build-fonts.py --check   # font glyph coverage gate
-python3 tools/qa.py                    # 156 functional/structural checks
+python3 tools/qa.py                    # 163 functional/structural checks
 ```
 
 `tools/qa.py` exits non-zero on any failure, so it is safe as a CI gate.
@@ -105,7 +105,7 @@ luminance ≈ 0.04–0.08 under the title and column bands, so white text sits a
 
 ## 4. Structural and content fidelity (`tools/qa.py`)
 
-156 checks, all passing. Coverage:
+163 checks, all passing. Coverage:
 
 - **Content** — all 100+ normative Vietnamese strings from
   `02-content-inventory.md` present, diacritics intact.
@@ -122,6 +122,9 @@ luminance ≈ 0.04–0.08 under the title and column bands, so white text sits a
   theme switches both ways with `aria-pressed`, mobile menu opens/closes.
 - **Rooms** — each palette applied end to end (canvas, `--accent` token, footer wash, hero
   scrim) and asserted *distinct* across themes, not merely present.
+- **Addressable rooms** — `?room=then` and `?room=now` each open their own room even with the
+  other saved, picking a room writes `?room=` with `replaceState`, and the HUD copies that
+  exact address (with the no-Clipboard-API fallback asserted separately).
 - **Soundtrack** — two room tracks, `preload="none"`, `loop`, no `src` before intent; only the
   active room plays; a room switch hands playback over and switching back resumes the same
   track mid-song; pause stops both and restores `document.title`.
