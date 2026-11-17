@@ -471,6 +471,25 @@ def run():
         check(now_accent != then_accent,
               "rooms: accent token is visually distinct per theme")
 
+        # rooms are addressable, so one can be sent to someone
+        page.goto(BASE + "?room=then", wait_until="networkidle")
+        page.wait_for_timeout(350)
+        check(html_el.get_attribute("data-theme") == "then"
+              and page.evaluate("getComputedStyle(document.body).backgroundColor")
+              == "rgb(11, 12, 14)",
+              "rooms: ?room=then opens the past room even with Now saved")
+        page.click('[data-set-theme="now"]')
+        page.wait_for_timeout(250)
+        check(page.evaluate("location.search") == "?room=now",
+              f"rooms: picking a room writes it to the URL "
+              f"({page.evaluate('location.search')!r})")
+        page.goto(BASE + "?room=now", wait_until="networkidle")
+        page.wait_for_timeout(350)
+        check(html_el.get_attribute("data-theme") == "now",
+              "rooms: ?room=now opens the present room")
+        page.goto(BASE, wait_until="networkidle")
+        page.wait_for_timeout(350)
+
         music_session()
         check(mt.get_attribute("aria-pressed") == "false",
               "music: control is back in the paused state after the session")
@@ -527,6 +546,50 @@ def run():
         page.wait_for_timeout(400)
         check(page.locator(".hero__plate").count() == 0,
               "hero: frosted plate removed")
+
+        # the HUD can hand the room to someone else
+        share_ctx = browser.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
+        share_ctx.add_init_script(
+            """Object.defineProperty(navigator, 'clipboard', {
+                 configurable: true,
+                 value: { writeText: function (t) { window.__copied = t; return Promise.resolve(); } }
+               });""")
+        sp = share_ctx.new_page()
+        sp.goto(BASE, wait_until="networkidle")
+        sp.click("#music-toggle")
+        sp.wait_for_function("() => !document.getElementById('music-now').paused", timeout=5000)
+        sp.wait_for_timeout(400)
+        sp.click("#liner-share")
+        sp.wait_for_timeout(300)
+        copied = sp.evaluate("() => window.__copied || null")
+        check(bool(copied) and copied.endswith("/?room=now"),
+              f"share: copies the present room's address ({copied!r})")
+        check(sp.eval_on_selector("#liner-share-text", "e => e.textContent").strip()
+              == "Đã sao chép liên kết phòng này",
+              "share: the button confirms the copy")
+        sp.click('[data-set-theme="then"]')
+        sp.wait_for_timeout(350)
+        check(sp.eval_on_selector("#liner-share-text", "e => e.textContent").strip()
+              == "Sao chép liên kết phòng này",
+              "share: the label resets when the room changes")
+        share_ctx.close()
+
+        no_clip = browser.new_context(viewport={"width": 1440, "height": 900}, locale="vi-VN")
+        no_clip.add_init_script(
+            "Object.defineProperty(navigator, 'clipboard', "
+            "{ configurable: true, value: undefined });")
+        np2 = no_clip.new_page()
+        np2.goto(BASE + "?room=then", wait_until="networkidle")
+        np2.click("#music-toggle")
+        np2.wait_for_function("() => !document.getElementById('music-then').paused", timeout=5000)
+        np2.wait_for_timeout(400)
+        np2.click("#liner-share")
+        np2.wait_for_timeout(300)
+        check(np2.evaluate("location.search") == "?room=then"
+              and np2.eval_on_selector("#liner-share-text", "e => e.textContent").strip()
+              == "Liên kết đã hiện ở thanh địa chỉ",
+              "share: without the Clipboard API the room is put in the address bar")
+        no_clip.close()
         check(page.locator(".hero__badge").count() == 0,
               "hero: rotating badge removed")
         check(page.locator(".hero__scroll").count() == 0,

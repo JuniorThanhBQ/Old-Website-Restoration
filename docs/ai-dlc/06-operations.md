@@ -66,7 +66,7 @@ Three places, all of which must agree when a palette changes:
 ## Verify
 
 ```bash
-python3 tools/qa.py               # 156 checks; non-zero exit on failure
+python3 tools/qa.py               # 163 checks; non-zero exit on failure
 ```
 
 Local QA needs Playwright once: `pip install playwright && python3 -m playwright install chromium`.

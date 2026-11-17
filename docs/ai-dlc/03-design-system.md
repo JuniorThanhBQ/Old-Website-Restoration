@@ -174,6 +174,11 @@ come from a deterministic sine walk; under `prefers-reduced-motion` they are set
 background is `--card-bg` rather than `--surface`, because a translucent card over the page would
 lose the artist line in the dark room.
 
+The card's share link (`.liner__share`) sits under the credit: 0.6 rem mono in `--accent-text`
+(5.4:1 on `--card-bg`, the same measured pair as the artist line), underlined rather than
+colour-only, hover to `--ink`, and it re-labels itself (`Sao chép liên kết phòng này` →
+`Đã sao chép liên kết phòng này`) when the room changes.
+
 **Signature seal** — a 43 px SVG in the footer: dashed outer ring (slow CSS rotation, stopped under
 reduced motion), inner rule, `V.T.T.A` in mono. Beside it, in two lines, the product credit. It is
 deliberately small and printed in `--accent`, so it reads as a maker's stamp on the page rather

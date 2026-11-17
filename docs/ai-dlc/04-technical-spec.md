@@ -99,6 +99,11 @@ Vanilla, one IIFE, strict mode, ≤ ~150 lines, all features degrade to a workin
 11. **Room soundtrack** — two `<audio>` elements, `#music-now` and `#music-then`, `preload="none"` + `loop`, source in `data-src`. State is one intent flag plus one "active room" key derived from `<html data-theme>`. Press → start the active room's track; room switch → pause the outgoing element and play the incoming one, which resumes at its own `currentTime` because the element is never re-sourced; press again → pause both. Volume fixed at 0.42; `document.title` shows `elapsed / total` only while playing; a failed `play()` promise resets the intent flag rather than leaving a pressed button over silence.
 12. **Liner HUD** — visible iff a track is actually playing (`!paused && !ended`); text filled from the active element's `data-title` / `data-artist` via `textContent`; `Escape` hides it. The equaliser creates an `AnalyserNode` lazily per room inside `try/catch`, never twice per element, and runs a single `requestAnimationFrame` loop that writes one `--level` per bar; without Web Audio it falls back to a `setInterval` sine walk; under reduced motion the levels are written once and no loop starts. Every loop is cancelled when playback stops — no orphaned timers.
 13. **Time capsule** — `localStorage['jth-first-seen']` (ISO string) read through the same `try/catch` helpers as the theme; a missing or unparsable value is replaced with now. `#capsule` is unhidden only after a date is rendered as `dd/mm/yyyy`. No network, no cookie.
+14. **Addressable rooms** — `?room=then` / `?room=now` is read before the saved choice and the
+    OS preference, so a link can hand someone a room; picking a room writes the parameter with
+    `history.replaceState` (never `pushState` — no history spam, back button unaffected). The
+    HUD's share button copies `roomUrl(<current room>)` through `navigator.clipboard`; if the API
+    is missing or rejects, it falls back to putting the room in the address bar and says so.
 
 Never use `innerHTML` with variable data; use `textContent`/`classList`/`setAttribute`.
 
