@@ -52,8 +52,6 @@
     --accent-soft: rgba(195, 52, 31, 0.10);
     --surface: #FFFDF9;
     --surface-2: #EDE7DB;
-    --glass: rgba(255, 253, 249, 0.72);
-    --glass-border: rgba(255, 253, 249, 0.55);
     --on-media: #FFFFFF;
     --on-media-soft: rgba(255, 255, 255, 0.80);
     --scrim-a: rgba(10, 12, 15, 0.72);
@@ -77,8 +75,6 @@
     --accent-soft: rgba(255, 162, 0, 0.14);
     --surface: rgba(255, 255, 255, 0.05);
     --surface-2: #1A1D21;
-    --glass: rgba(11, 12, 14, 0.62);
-    --glass-border: rgba(242, 239, 233, 0.16);
     --on-media: #F2EFE9;
     --on-media-soft: rgba(242, 239, 233, 0.78);
     --scrim-a: rgba(4, 5, 6, 0.78);
@@ -413,6 +409,29 @@
     color: var(--accent-ink);
   }
 
+  /* ── music toggle (the 2022 header had one; it streams song.mp3/song2.mp3) ── */
+  .music-toggle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: var(--r-pill);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: inherit;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+  }
+  .site-header.is-stuck .music-toggle { border-color: var(--rule); }
+  .music-toggle:hover { border-color: var(--accent); }
+  .music-toggle[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .music-toggle__icon { grid-area: 1 / 1; }
+  .music-toggle[aria-pressed="false"] .music-toggle__icon--pause,
+  .music-toggle[aria-pressed="true"] .music-toggle__icon--play { display: none; }
+
   .menu-toggle {
     display: none;
     width: 2.6rem;
@@ -473,13 +492,17 @@
     line-height: 1.9;
   }
 
-  /* ── hero ── */
+  /* ── hero ──
+   Composition follows the 2022 front page: full-bleed video, an indented name
+   block, a hairline across the full width, then four columns hanging from it.
+   What is new is the type scale, the grid and the two-palette system. */
   .hero {
     position: relative;
-    display: grid;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-height: 100svh;
-    padding-block: clamp(7rem, 14vh, 10rem) clamp(3rem, 7vh, 5rem);
+    padding-block: clamp(6rem, 13vh, 9rem) clamp(3rem, 8vh, 6rem);
     color: var(--on-media);
     isolation: isolate;
     overflow: hidden;
@@ -521,52 +544,29 @@
     opacity: 0.5;
   }
 
-  .hero__plate {
-    position: relative;
-    width: min(100% - 2 * var(--gutter), 62rem);
-    margin-inline: auto;
+  /* the prototype runs this block nearly edge to edge — the hairline and the
+     four columns span the viewport, not the narrower reading shell */
+  .hero__layout {
+    width: 100%;
+    padding-inline: var(--gutter);
     display: grid;
-    gap: clamp(1.25rem, 2.6vw, 2rem);
-    padding: clamp(1.5rem, 4vw, 3.25rem);
+    gap: clamp(1.5rem, 3.2vw, 2.75rem);
   }
 
-  .glass {
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(22px) saturate(150%);
-    -webkit-backdrop-filter: blur(22px) saturate(150%);
-  }
-  .hero .glass {
-    /* the plate sits on media in both palettes: force the dark-room reading.
-       Lighter than the scrimmed media so it reads as a lit pane of glass. */
-    background:
-      linear-gradient(160deg, rgba(56, 60, 68, 0.52) 0%, rgba(20, 22, 27, 0.62) 58%, rgba(11, 12, 15, 0.70) 100%);
-    border-color: rgba(255, 255, 255, 0.26);
-    color: #F4F1EA;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.10) inset, 0 40px 90px -40px rgba(0, 0, 0, 0.85);
-  }
-
-  .hero__plate-head { display: grid; gap: var(--sp-3); }
-
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--step--1);
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: #FFB43A;
+  /* indented under the wordmark, where 2022 put it: the name block starts a
+     quarter of the way across, so the column row can run under it */
+  .hero__name {
+    display: grid;
+    gap: var(--sp-2);
+    padding-inline-start: clamp(0rem, 25vw, 22rem);
   }
 
   .hero__title {
     font-family: var(--font-display);
-    font-size: var(--step-5);
-    line-height: 0.94;
-    letter-spacing: -0.03em;
+    font-size: var(--step-4);
+    line-height: 1.02;
+    letter-spacing: -0.028em;
     font-variation-settings: "opsz" 144, "SOFT" 24, "WONK" 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.28em;
   }
   .hero__title-accent { color: #FFB43A; }
 
@@ -579,13 +579,37 @@
   }
   .hero__byline sup { font-size: 0.72em; margin-inline-start: 0.15em; }
 
-  .hero__standfirst {
+  .hero__rule {
+    height: 1px;
+    border: 0;
+    background: rgba(255, 255, 255, 0.34);
+  }
+
+  .hero__columns {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 2.75rem);
+    text-align: start;
+  }
+
+  .hero__col {
+    display: grid;
+    align-content: start;
+    gap: var(--sp-3);
+  }
+
+  .hero__col-title {
     font-family: var(--font-display);
-    font-size: var(--step-2);
-    line-height: 1.24;
-    max-width: 26ch;
+    font-size: var(--step-1);
+    line-height: 1.16;
+    font-variation-settings: "opsz" 60;
     color: #F6F3EC;
-    font-variation-settings: "opsz" 70;
+  }
+
+  .hero__col-body {
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.82);
   }
 
   .hero__hours {
@@ -595,28 +619,20 @@
     color: rgba(255, 255, 255, 0.76);
   }
 
-  .hero__motto {
-    display: grid;
-    gap: var(--sp-2);
-    padding-block-start: var(--sp-4);
-    border-block-start: 1px solid rgba(255, 255, 255, 0.22);
-    max-width: 52ch;
-  }
-  .hero__motto .label { color: #FFB43A; }
-  .hero__motto blockquote p {
+  .hero__motto { margin: 0; }
+  .hero__motto p {
     font-family: var(--font-display);
-    font-size: var(--step-1);
+    font-size: var(--step-0);
     line-height: 1.44;
-    text-indent: -0.4em;
-    color: #F6F3EC;
+    color: rgba(255, 255, 255, 0.86);
     font-variation-settings: "opsz" 40;
   }
 
   .clock-chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--sp-3);
-    padding: 0.45rem 1rem;
+    gap: var(--sp-2);
+    padding: 0.32rem 0.7rem;
     border-radius: var(--r-pill);
     border: 1px solid rgba(255, 255, 255, 0.26);
     background: rgba(255, 255, 255, 0.06);
@@ -633,105 +649,29 @@
     min-width: 8.6ch;
   }
 
-  .hero__facts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: var(--sp-5) var(--sp-7);
-    padding-block-start: var(--sp-4);
-    border-block-start: 1px solid rgba(255, 255, 255, 0.22);
-  }
+  /* the 2022 fact lists: a serif label over its value, hairline between entries
+     — same weight as the headings in the other columns, so all four columns of
+     the row read in parallel, as they did in the prototype */
   .facts { display: grid; gap: 0; }
   .facts__row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--sp-4);
-    padding-block: 0.55rem;
-    border-block-end: 1px solid rgba(255, 255, 255, 0.11);
+    display: grid;
+    gap: 0.15rem;
+    padding-block: 0.45rem;
+    border-block-end: 1px solid rgba(255, 255, 255, 0.14);
   }
   .facts__row:last-child { border-block-end: 0; }
   .facts dt {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.66);
-    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    line-height: 1.2;
+    font-variation-settings: "opsz" 60;
+    color: #F6F3EC;
   }
   .facts dd {
     margin: 0;
     font-size: var(--step--1);
-    color: #F4F1EA;
-    text-align: end;
-  }
-
-  /* rotating badge — the spinning stage */
-  .hero__badge {
-    position: absolute;
-    inset-block-end: clamp(1rem, 4vw, 2.5rem);
-    inset-inline-end: clamp(1rem, 4vw, 3rem);
-    width: clamp(5.5rem, 9vw, 8rem);
-    aspect-ratio: 1;
-    display: grid;
-    place-items: center;
-    color: rgba(255, 255, 255, 0.72);
-  }
-  .hero__badge-ring {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    animation: spin 34s linear infinite;
-  }
-  .hero__badge-text {
-    font-family: var(--font-mono);
-    font-size: 7.2px;
-    letter-spacing: 0.24em;
-    fill: currentColor;
-    text-transform: uppercase;
-  }
-  .hero__badge-core {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 46%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    font-size: 1.05rem;
-    color: #FFB43A;
-    background: rgba(9, 10, 12, 0.42);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .hero__scroll {
-    position: absolute;
-    inset-block-end: clamp(1.25rem, 4vw, 2.5rem);
-    inset-inline-start: var(--gutter);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-3);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.78);
-    text-decoration: none;
-  }
-  .hero__scroll-line {
-    display: block;
-    width: 1px;
-    height: 2.4rem;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent);
-    animation: bob 2.4s var(--ease) infinite;
-    transform-origin: top;
-  }
-  @keyframes bob {
-    0%, 100% { transform: scaleY(0.45); opacity: 0.5; }
-    50%      { transform: scaleY(1);    opacity: 1; }
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.82);
   }
 
   /* ── about ── */
@@ -911,6 +851,8 @@
     border: 1px solid var(--rule);
   }
   .ikigai__ring--2 { width: 76%; height: 76%; border-color: var(--rule-strong); }
+  /* the rotating-stage motif, still turning in the goals diagram */
+  @keyframes spin { to { transform: rotate(360deg); } }
   .ikigai__ring--spin {
     width: 88%;
     height: 88%;
@@ -1235,35 +1177,39 @@
     .portrait { max-width: 26rem; }
     .faq__grid { grid-template-columns: 1fr; }
     .faq__aside { position: static; order: -1; }
-    .hero__badge { display: none; }
+    .hero__columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 40rem) {
     .site-header__inner { min-height: 3.7rem; padding-block: var(--sp-2); }
     .wordmark__text { font-size: 1rem; }
     .hero { min-height: auto; padding-block: 7rem 4rem; }
-    .hero__plate { width: 100%; }
     .hero__title { font-size: clamp(2.5rem, 13vw, 3.6rem); }
-    .hero__plate-head { gap: var(--sp-2); }
-    .hero__scroll { display: none; }
+    .hero__name { padding-inline-start: 0; }
     .ikigai__node { font-size: 0.64rem; padding: 0.45rem 0.8rem; }
     .ikigai__core { font-size: var(--step-0); }
     .site-footer__bottom { flex-direction: column; }
     .theme-switch__btn { padding-inline: 0.6rem; }
   }
 
+  @media (max-width: 30rem) {
+    /* one column on a phone: the protoype's four-up row would be ~80px wide each */
+    .hero__columns { grid-template-columns: 1fr; gap: var(--sp-4); }
+  }
+
   @media (max-width: 23rem) {
     .ikigai__node { font-size: 0.58rem; padding: 0.4rem 0.62rem; letter-spacing: 0.06em; }
-    /* At 320px the wordmark + theme switch + menu button need 307px inside a 283px
-       content box, so the menu button hung 5px past the clipped edge. Tighten the
-       wordmark and the switch rather than dropping either control. */
+    /* At 320px the wordmark + music + theme switch + menu button need 307px inside
+       a 283px content box, so the menu button hung 5px past the clipped edge.
+       Tighten the controls rather than dropping any of them. */
     .site-header__inner { gap: var(--sp-2); }
     .wordmark { gap: var(--sp-2); }
     .wordmark__text { font-size: 0.9rem; }
     .theme-switch { padding: 1px; }
     .theme-switch__btn { padding-inline: 0.42rem; font-size: 0.72rem; }
     .menu-toggle { width: 2.4rem; height: 2.1rem; }
-    .header-tools { gap: 0.4rem; }
+    .music-toggle { width: 1.85rem; height: 1.85rem; }
+    .header-tools { gap: 0.3rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1275,7 +1221,7 @@
       scroll-behavior: auto !important;
     }
     .reveal { opacity: 1; transform: none; }
-    .hero__badge-ring, .ikigai__ring--spin, .marquee__track, .hero__scroll-line { animation: none; }
+    .ikigai__ring--spin, .marquee__track { animation: none; }
     .hero__video { display: none; }
     .ikigai__ring--spin::after { display: none; }
   }
@@ -1283,18 +1229,20 @@
   @media (prefers-contrast: more) {
     :root, [data-theme="now"] { --rule: rgba(20, 23, 28, 0.5); --ink-soft: #3A3F47; }
     [data-theme="then"] { --rule: rgba(242, 239, 233, 0.5); --ink-soft: #CFD4DC; }
-    .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: #0B0C0E; }
     .hero__scrim { background: rgba(4, 5, 6, 0.86); }
   }
 
   @media print {
-    .site-header, .scroll-progress, .hero__media, .hero__badge, .hero__scroll,
-    .marquee, .theme-switch, .menu-toggle, .skip-link, .hero__video { display: none !important; }
+    .site-header, .scroll-progress, .hero__media,
+    .marquee, .theme-switch, .menu-toggle, .music-toggle, .skip-link, .hero__video {
+      display: none !important; }
     body { background: #fff; color: #000; font-size: 11pt; }
     .hero { min-height: auto; color: #000; padding-block: 0 1.5rem; }
-    .hero .glass { background: none; border: 0; box-shadow: none; color: #000; padding: 0; }
-    .hero__title, .hero__standfirst, .hero__motto blockquote p, .hero__byline,
-    .hero__hours, .facts dd, .hero__title-accent { color: #000; }
+    .hero__title, .hero__col-title, .hero__col-body, .hero__motto p,
+    .hero__byline, .hero__hours, .facts dd, .facts dt, .hero__title-accent,
+    .clock-chip, .clock-chip__label, .clock-chip__value { color: #000; }
+    .hero__rule { background: #000; }
+    .clock-chip { border-color: #000; background: none; }
     .faq-item__panel[hidden] { display: block; }
     .faq-item__icon { display: none; }
     .site-footer { background: #fff; color: #000; }

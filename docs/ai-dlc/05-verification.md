@@ -7,7 +7,7 @@ Reproduce with:
 
 ```bash
 python3 tools/build-fonts.py --check   # font glyph coverage gate
-python3 tools/qa.py                    # 63 functional/structural checks
+python3 tools/qa.py                    # 114 functional/structural checks
 ```
 
 `tools/qa.py` exits non-zero on any failure, so it is safe as a CI gate.
@@ -79,12 +79,12 @@ text block, not from declared CSS colours.
 Body copy on canvas: 15.8 (Now) / 17.1 (Then). Muted `--ink-soft`: 5.65 / 8.77.
 All secondary text also clears 4.5.
 
-The frosted hero plate was additionally verified to be *visible as an object*: media
-behind it renders at RGB ≈ 8–13, the plate at 19–33, with a 75–88 edge highlight.
+The hero scrim was verified to keep everything behind the text legible: the media renders at
+luminance ≈ 0.04–0.08 under the title and column bands, so white text sits at >12:1 there.
 
 ## 4. Structural and content fidelity (`tools/qa.py`)
 
-73 checks, all passing. Coverage:
+114 checks, all passing. Coverage:
 
 - **Content** — all 100+ normative Vietnamese strings from
   `02-content-inventory.md` present, diacritics intact.
@@ -107,6 +107,18 @@ behind it renders at RGB ≈ 8–13, the plate at 19–33, with a 75–88 edge h
   sit inside the viewport and no horizontal scroll is possible.
 - **Security posture** — exactly one `<script>` tag and it has `src`; CSP meta present;
   no root-absolute `src`; no inline scripts.
+- **Favicon** — every declared icon resolves, the redrawn `favicon.svg` is gone, the 32 px
+  icon is 32×32 and still carries the 2022 artwork's amber on transparency (checked by
+  reading its pixels in the browser, not by trusting the file name).
+- **Music player** — present, starts paused, fetches no audio before the first press, then
+  plays at reduced volume, swaps its icon, shows `elapsed / total` in `document.title`, and
+  restores the title on pause. The suite also seeks to the end of each track to exercise the
+  chain (track 1 → track 2) and the wrap back to track 1, and asserts that rapid clicking
+  leaves `aria-pressed` agreeing with what is actually audible.
+- **Hero composition** — block order is name → hairline → columns, the title is indented past
+  15% of the viewport and sits on one line, the hairline spans the full width, four columns
+  start left of the title, and the headings read `HCMC-OU` / `Châm ngôn` / `Ngành học` /
+  `Sở thích`. The removed plate, badge and scroll cue are asserted absent.
 
 Content was also diffed directly against the archived 2022 document: **31/31 long text
 blocks reproduced verbatim**.
@@ -137,7 +149,7 @@ blocks reproduced verbatim**.
 
 | # | Deviation | Reason |
 |---|---|---|
-| D1 | Background-music player omitted | Third-party commercial recordings; autoplay audio also fails the UX bar. |
+| D1 | **Restored** at the owner's request: background-music player and the original favicon (was: both omitted) | The owner asked for the play button and icon back. Audio is their own content, re-encoded to 96 kbps and fetched only when the button is pressed — no autoplay, so the UX objection to the first pass no longer applies. |
 | D2 | Next.js → hand-written HTML/CSS/JS | GitHub Pages has no build runtime; a framework bundle cannot meet the performance budget. |
 | D3 | FAQ answer 03 still says "Next.js" | Verbatim historical content — restoration, not correction. |
 | D4 | Romanised anchor ids + legacy aliases | `#gioi-thieu` etc. for readable URLs, while `#about`/`#role`/`#goal`/`#FAQ` remain so old inbound links still land. |

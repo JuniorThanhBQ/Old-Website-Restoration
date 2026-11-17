@@ -12,9 +12,9 @@ editorial room with hard rules and a red accent, like a mid-century record sleev
 panels. Same floor plan, same furniture, different light. That is the song in one interaction —
 the place is identical, the feeling is not.
 
-The 2022 interface characteristics survive as *furniture*: full-bleed hero video under frosted
-glass, pill-shaped nav with a fill-on-hover, bracketed `[ 01 ]` FAQ numbering, a radial four-circle
-"ikigai" diagram, and quote interludes that interrupt the page rhythm.
+The 2022 interface characteristics survive as *furniture*: full-bleed hero video with the name set
+over it, pill-shaped nav with a fill-on-hover, bracketed `[ 01 ]` FAQ numbering, a radial four-circle
+"ikigai" diagram, quote interludes that interrupt the page rhythm, and the header's own play button.
 
 ## 2. Colour tokens
 
@@ -32,7 +32,6 @@ Two palettes are themable via `[data-theme]` on `<html>`. Name = semantic role, 
 | `--accent` | `#C3341F` signal red | links, active states, accents |
 | `--accent-ink` | `#FFFFFF` | text on accent fill |
 | `--surface` | `#FFFDF9` | raised card |
-| `--glass` | `rgba(255,253,249,0.62)` + `blur(18px)` | frosted panel on media |
 | `--shadow` | `0 1px 0 rgba(20,23,28,.05), 0 18px 40px -24px rgba(20,23,28,.35)` | card lift |
 
 ### Then (the 2022 room)
@@ -46,8 +45,7 @@ Two palettes are themable via `[data-theme]` on `<html>`. Name = semantic role, 
 | `--rule` | `rgba(242,239,233,0.18)` | rules |
 | `--accent` | `#FFA200` amber | the original site's own accent, restored |
 | `--accent-ink` | `#0B0C0E` | text on amber |
-| `--surface` | `rgba(255,255,255,0.05)` | glass card |
-| `--glass` | `rgba(10,11,13,0.55)` + `blur(18px)` | frosted panel |
+| `--surface` | `rgba(255,255,255,0.05)` | raised card |
 | `--shadow` | `0 18px 60px -30px #000` | depth |
 
 Amber `#FFA200` on `#0B0C0E` = 9.0:1. Red `#C3341F` on bone `#F4F0E8` = 4.7:1 (body-safe).
@@ -98,12 +96,26 @@ links with active-section highlight driven by IntersectionObserver. Right: theme
 `Now | Then`, `role="group"`, `aria-pressed`) and a menu button below `860px` opening a full-height
 sheet. Skip-link is the first focusable element.
 
-**Hero** — full-viewport. Layers, back to front: muted looping video (`train.mp4`) → poster →
-vertical/horizontal scrim → frosted plate. Plate contains: `HCMC-OU` eyebrow, `Junior Thành` h1,
-`Văn Trung Thành - K23 ᵀᴹ` byline, standfirst, `Châm ngôn` quote, live clock chip, and a two-column
-fact list (`Ngành học`/`Chuyên ngành`/`Chứng chỉ` + `Sở thích`/`Trình độ`/`Khác`). A circular
-"spin" badge sits at the plate's edge with rotating text (the rotating-stage motif); it doubles as
-the scroll-to-about trigger.
+**Hero** — full-viewport, and a direct restatement of the 2022 prototype rather than a
+reinterpretation of it. Layers, back to front: muted looping video (`train.mp4`) → poster →
+scrim. On top, three blocks in the prototype's own order:
+
+1. **Name** — indented about a quarter of the viewport from the left, so the column row below can
+   run underneath it. `Junior Thành` on one line (display serif, `Thành` in amber), then
+   `Văn Trung Thành - K23 ᵀᴹ` as a mono byline beneath.
+2. **Hairline** — full-width rule, the prototype's `<hr>`, separating the name from the facts.
+3. **Columns** — four across at desktop, stacking on mobile: `HCMC-OU`, `Châm ngôn`
+   (the quote plus a live clock chip), and two fact lists (`Ngành học`/`Chuyên ngành`/`Chứng chỉ`
+   and `Sở thích`/`Trình độ`/`Khác`), each entry a serif label over its value with a hairline
+   between rows.
+
+The first pass wrapped all of this in a frosted plate with a rotating badge and a scroll cue. Those
+were my inventions, not the original's, so they are gone — the glass tokens went with them.
+
+**Header music button** — the prototype's play control, restored at the owner's request. A single
+icon button in `.header-tools` (`aria-pressed`, label toggles between `Bật nhạc nền` and
+`Tắt nhạc nền`) playing the original two tracks in sequence. Nothing is fetched until it is
+pressed, and `document.title` shows `elapsed / total` while playing, as the 2022 site did.
 
 **Section header** — the recurring editorial unit: mono index `01` + rule + label
 (`GIỚI THIỆU`), then display h2. Establishes the archival register and makes the page scannable.

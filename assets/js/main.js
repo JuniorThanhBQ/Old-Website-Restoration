@@ -292,4 +292,115 @@
       });
     }
   }
+
+  /* ── music player (the 2022 header button) ──────────────────
+     Two tracks in sequence, like the original (song.mp3 → song2.mp3).
+     Intent drives the UI, not `paused`: play() is async, so toggling off the
+     media flag alone lets a fast double-click read "still paused" twice and
+     start the track twice. Nothing is fetched until the first press — each
+     src is attached when its track is about to play, so visitors who never
+     press play, and those who only hear track one, pay for no audio. */
+  var musicBtn = document.getElementById("music-toggle");
+  var tracks = [
+    document.getElementById("music-a"),
+    document.getElementById("music-b")
+  ].filter(Boolean);
+
+  if (musicBtn && tracks.length) {
+    var pageTitle = document.title;
+    var trackIndex = 0;
+    var titleTimer = null;
+    var wantPlaying = false;
+    var attempt = 0;
+
+    tracks.forEach(function (el) { el.volume = 0.42; });
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+    function stamp(secs) {
+      if (!isFinite(secs) || secs < 0) return "0:00";
+      return Math.floor(secs / 60) + ":" + pad2(Math.floor(secs % 60));
+    }
+
+    function current() { return tracks[trackIndex]; }
+    function anyPlaying() {
+      return tracks.some(function (el) { return !el.paused && !el.ended; });
+    }
+
+    function ensureSrc(el) {
+      if (!el.getAttribute("src") && el.dataset.src) el.src = el.dataset.src;
+    }
+
+    function paintTitle() {
+      var el = current();
+      document.title = stamp(el.currentTime) + " / " + stamp(el.duration);
+    }
+
+    function syncTitle() {
+      if (anyPlaying()) {
+        paintTitle();
+        if (titleTimer === null) {
+          titleTimer = window.setInterval(paintTitle, 1000);
+        }
+      } else {
+        if (titleTimer !== null) {
+          window.clearInterval(titleTimer);
+          titleTimer = null;
+        }
+        document.title = pageTitle;
+      }
+    }
+
+    /* one place that reads the real state, so a late `playing` or `pause`
+       event can never leave the button saying the opposite of the audio */
+    function sync() {
+      setPressed(wantPlaying || anyPlaying());
+      syncTitle();
+    }
+
+    function setPressed(on) {
+      musicBtn.setAttribute("aria-pressed", String(on));
+      musicBtn.setAttribute("aria-label", on ? "Tắt nhạc nền" : "Bật nhạc nền");
+    }
+
+    function start() {
+      var el = current();
+      var mine = ++attempt;
+      wantPlaying = true;
+      ensureSrc(el);
+      /* pause siblings first; their pause events are harmless because sync()
+         only demotes the button once nothing is playing and intent is off */
+      tracks.forEach(function (other) { if (other !== el) other.pause(); });
+      var started = el.play();
+      if (started && typeof started.catch === "function") {
+        started.catch(function () {
+          /* a superseded attempt must not clear the state of a newer one */
+          if (mine !== attempt) return;
+          wantPlaying = false;
+          sync();
+        });
+      }
+      sync();
+    }
+
+    function stop() {
+      wantPlaying = false;
+      attempt++;                    /* invalidate any in-flight play() */
+      tracks.forEach(function (el) { el.pause(); });
+      sync();
+    }
+
+    tracks.forEach(function (el, i) {
+      el.addEventListener("playing", sync);
+      el.addEventListener("pause", sync);
+      el.addEventListener("ended", function () {
+        if (!wantPlaying) return;   /* the visitor already stopped us */
+        trackIndex = (i + 1) % tracks.length;
+        start();
+      });
+    });
+
+    musicBtn.addEventListener("click", function () {
+      if (wantPlaying) stop(); else start();
+    });
+  }
 })();

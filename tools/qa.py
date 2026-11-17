@@ -258,6 +258,203 @@ def run():
         page.evaluate("window.scrollTo(0,0)")
         page.screenshot(path=str(OUT / "then-mobile.png"), full_page=True)
 
+        # ── favicon: the 2022 icon, not a redrawn mark ──
+        page.set_viewport_size({"width": 1440, "height": 900})
+        page.evaluate("window.scrollTo(0,0)")
+        page.wait_for_timeout(200)
+        fav = page.evaluate(
+            """() => {
+              const links = [...document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"]')];
+              return links.map(l => ({ rel: l.rel, href: l.getAttribute('href') }));
+            }""")
+        check(len(fav) >= 3, f"favicon: {len(fav)} icon links declared")
+        check(not any("favicon.svg" in f["href"] for f in fav),
+              "favicon: the invented SVG monogram is gone")
+        served = page.evaluate(
+            """async (urls) => {
+              const out = [];
+              for (const u of urls) {
+                const r = await fetch(u, { cache: "no-store" });
+                const b = await r.blob();
+                out.push({ url: u, ok: r.ok, type: b.type, size: b.size });
+              }
+              return out;
+            }""", [f["href"] for f in fav if f["href"]])
+        check(all(s["ok"] for s in served),
+              f"favicon: every declared icon resolves ({len(served)} fetched)")
+        check(all(s["size"] > 100 for s in served), "favicon: icons are non-empty files")
+        check(any(s["type"] == "image/png" for s in served), "favicon: a PNG icon is served")
+        # a 32px favicon cut from the 2022 artwork is mostly amber-on-transparent;
+        # a redrawn dark plate would read as opaque. Sample its alpha coverage.
+        cov = page.evaluate(
+            """async (url) => {
+              const img = new Image();
+              img.src = url;
+              await img.decode();
+              const c = document.createElement('canvas');
+              c.width = img.naturalWidth; c.height = img.naturalHeight;
+              const g = c.getContext('2d');
+              g.drawImage(img, 0, 0);
+              const d = g.getImageData(0, 0, c.width, c.height).data;
+              let opaque = 0, amber = 0;
+              for (let i = 0; i < d.length; i += 4) {
+                if (d[i + 3] > 200) opaque++;
+                if (d[i] > 180 && d[i + 1] > 140 && d[i + 2] < 140 && d[i + 3] > 200) amber++;
+              }
+              const n = d.length / 4;
+              return { opaquePct: opaque / n, amberPct: amber / n, w: c.width, h: c.height };
+            }""", next(f["href"] for f in fav if "favicon-32" in (f["href"] or "")))
+        check(cov["w"] == 32 and cov["h"] == 32, f"favicon: 32px icon is 32×32 ({cov['w']}×{cov['h']})")
+        check(cov["amberPct"] > 0.15,
+              f"favicon: carries the 2022 amber glyph ({cov['amberPct']*100:.0f}% of pixels)")
+        check(cov["opaquePct"] < 0.95,
+              f"favicon: transparent background kept, not an opaque plate ({cov['opaquePct']*100:.0f}% opaque)")
+
+        # ── music player: present, inert until pressed, then two chained tracks ──
+        mt = page.locator("#music-toggle")
+        check(mt.is_visible(), "music: header play button is visible")
+        check(mt.get_attribute("aria-pressed") == "false",
+              "music: starts in the paused state")
+        check(mt.get_attribute("aria-label") not in (None, ""),
+              "music: control has an accessible name")
+        check(page.eval_on_selector_all("audio", "els => els.length") == 2,
+              "music: two tracks wired (as in 2022: song.mp3 then song2.mp3)")
+        check(page.evaluate(
+            """() => [...document.querySelectorAll('audio')]
+                     .every(a => a.preload === 'none' && !a.getAttribute('src'))"""),
+            "music: no track is fetched until the visitor presses play")
+        check(page.title().strip() == "Junior Thành",
+              "music: document.title untouched before playing")
+
+        page.click("#music-toggle")
+        page.wait_for_function(
+            "() => !document.getElementById('music-a').paused", timeout=5000)
+        page.wait_for_timeout(1600)
+        check(mt.get_attribute("aria-pressed") == "true",
+              "music: pressing play sets aria-pressed=true")
+        playing_title = page.title()
+        check(bool(re.match(r"^\d+:\d{2} / \d+:\d{2}$", playing_title)),
+              f"music: title shows elapsed / total while playing ({playing_title!r})")
+        check(page.eval_on_selector("#music-a", "a => a.currentTime > 0"),
+              "music: the first track actually advanced")
+        check(page.evaluate(
+            """() => {
+              const p = document.querySelector('.music-toggle__icon--play');
+              const q = document.querySelector('.music-toggle__icon--pause');
+              return getComputedStyle(p).display === 'none' && getComputedStyle(q).display !== 'none';
+            }"""), "music: icon swaps to pause while playing")
+        check(page.eval_on_selector("#music-a", "a => a.volume < 1"),
+              "music: plays at a reduced volume, not full blast")
+
+        page.click("#music-toggle")
+        page.wait_for_timeout(500)
+        check(mt.get_attribute("aria-pressed") == "false",
+              "music: pressing again pauses")
+        check(page.evaluate(
+            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
+                     return a.paused && b.paused; }"""), "music: both tracks are stopped")
+        check(page.title().strip() == "Junior Thành",
+              "music: document.title restored on pause")
+        page.screenshot(path=str(OUT / "music-paused.png"), clip={"x": 0, "y": 0, "width": 1440, "height": 120})
+
+        # chaining and wrap — the 2022 player played song.mp3 then song2.mp3.
+        # Seeking to the end is the only practical way to reach `ended` in a
+        # test, and it is exactly the code path the chain runs through.
+        page.click("#music-toggle")
+        page.wait_for_function("() => !document.getElementById('music-a').paused", timeout=5000)
+        page.evaluate("""() => { const a = document.getElementById('music-a');
+                             a.currentTime = Math.max(0, a.duration - 0.4); }""")
+        page.wait_for_function("() => !document.getElementById('music-b').paused", timeout=10000)
+        page.wait_for_timeout(600)
+        check(page.evaluate(
+            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
+                     return a.paused && !b.paused; }"""),
+            "music: track 1 chains into track 2")
+        check(mt.get_attribute("aria-pressed") == "true",
+              "music: button stays pressed across the track change")
+        page.evaluate("""() => { const b = document.getElementById('music-b');
+                             b.currentTime = Math.max(0, b.duration - 0.4); }""")
+        page.wait_for_function(
+            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
+                    return !a.paused && b.paused; }""", timeout=10000)
+        check(mt.get_attribute("aria-pressed") == "true",
+              "music: the pair loops back to track 1")
+        page.click("#music-toggle")
+        page.wait_for_timeout(400)
+
+        # rapid toggling must not leave aria-pressed claiming the opposite
+        page.click("#music-toggle"); page.click("#music-toggle"); page.click("#music-toggle")
+        page.wait_for_timeout(1200)
+        consistent = page.evaluate(
+            """() => { const a = document.getElementById('music-a'), b = document.getElementById('music-b');
+                     const pressed = document.getElementById('music-toggle').getAttribute('aria-pressed') === 'true';
+                     return pressed === (!a.paused || !b.paused); }""")
+        check(consistent, "music: rapid clicks leave aria-pressed matching the audio")
+        if page.evaluate("() => [...document.querySelectorAll('audio')].some(a => !a.paused)"):
+            page.click("#music-toggle")
+        page.wait_for_timeout(400)
+
+        # ── hero composition: the 2022 prototype's shape, not the frosted plate ──
+        check(page.locator(".hero__plate").count() == 0,
+              "hero: frosted plate removed")
+        check(page.locator(".hero__badge").count() == 0,
+              "hero: rotating badge removed")
+        check(page.locator(".hero__scroll").count() == 0,
+              "hero: scroll cue removed")
+        order = page.evaluate(
+            """() => {
+              const layout = document.querySelector('.hero__layout');
+              return [...layout.children].map(e => e.className.split(' ')[0]);
+            }""")
+        check(order == ["hero__name", "hero__rule", "hero__columns"],
+              f"hero: name → hairline → columns, in that order ({order})")
+        geom = page.evaluate(
+            """() => {
+              const r = (s) => { const e = document.querySelector(s);
+                const b = e.getBoundingClientRect();
+                return { x: b.x, y: b.y, w: b.width, h: b.height, right: b.right }; };
+              const title = r('.hero__title'), rule = r('.hero__rule');
+              const cols = [...document.querySelectorAll('.hero__col')].map(e => {
+                const b = e.getBoundingClientRect(); return { x: b.x, w: b.width }; });
+              return { title, rule, cols, vw: innerWidth,
+                       nameX: r('.hero__name').x + parseFloat(getComputedStyle(document.querySelector('.hero__name')).paddingLeft) };
+            }""")
+        check(abs(geom["title"]["x"] - geom["nameX"]) < 2,
+              "hero: title starts at the indented name block's text edge")
+        check(geom["title"]["x"] > geom["vw"] * 0.15,
+              f"hero: title indented from the left edge, as in 2022 ({round(geom['title']['x'])}px of {geom['vw']})")
+        check(geom["rule"]["w"] > geom["vw"] * 0.9,
+              f"hero: hairline runs the full width ({round(geom['rule']['w'])} of {geom['vw']})")
+        check(geom["rule"]["y"] > geom["title"]["y"],
+              "hero: hairline sits below the name block")
+        check(len(geom["cols"]) == 4, f"hero: four fact columns, as in 2022 ({len(geom['cols'])})")
+        check(geom["cols"][0]["x"] < geom["title"]["x"],
+              "hero: the column row starts left of the indented title, as in 2022")
+        check(geom["title"]["h"] < 100,
+              f"hero: 'Junior Thành' fits on one line ({round(geom['title']['h'])}px tall)")
+        hero_text = page.evaluate(
+            """() => {
+              const t = document.querySelector('.hero__title');
+              const b = document.querySelector('.hero__byline');
+              /* columns 3-4 are <dl> fact lists, so their leading label is a <dt> */
+              const cols = [...document.querySelectorAll('.hero__col')].map(c => {
+                const h = c.querySelector('.hero__col-title');
+                const dt = c.querySelector('.facts dt');
+                return (h || dt).textContent.trim();
+              });
+              return { title: t.textContent.replace(/\\s+/g,' ').trim(),
+                       byline: b.textContent.replace(/\\s+/g,' ').trim(),
+                       cols };
+            }""")
+        check(hero_text["title"] == "Junior Thành",
+              f"hero: title reads 'Junior Thành' verbatim ({hero_text['title']!r})")
+        check(hero_text["byline"].startswith("Văn Trung Thành - K23"),
+              f"hero: byline verbatim ({hero_text['byline']!r})")
+        check(hero_text["cols"] == ["HCMC-OU", "Châm ngôn", "Ngành học", "Sở thích"],
+              f"hero: the four column headings are the original's ({hero_text['cols']})")
+        check(page.locator(".hero .facts").count() == 2,
+              "hero: both fact lists kept (3 rows each)")
+
         # ── reduced motion ──
         rm = browser.new_context(viewport={"width": 1280, "height": 900},
                                  reduced_motion="reduce")

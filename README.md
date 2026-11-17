@@ -20,6 +20,12 @@ Same content, same layout, same coordinates — only the light changes. That *is
 retain the interface character of that era while blending in modern trends, rather than
 reskinning it into something the original never was.
 
+The original's furniture is all here: its favicon, the header play button with the two songs
+it shipped, and the homepage's own composition — name indented over the video, a full-width
+hairline, four fact columns beneath it. The player needs JavaScript, so it is hidden rather
+than shown-but-dead when scripting is off; everything else, including all the copy, works
+without it.
+
 ## Build
 
 None. There is no package manifest, no framework, no bundler.
@@ -38,7 +44,7 @@ Measured, not asserted — full evidence in [`docs/ai-dlc/05-verification.md`](d
 | Lighthouse desktop | **100** across all four |
 | Layout shift | **0** |
 | axe-core (WCAG 2.1 AA, both themes, desktop + mobile) | **0 violations** |
-| Functional checks (`tools/qa.py`) | **73 / 73** |
+| Functional checks (`tools/qa.py`) | **114 / 114** |
 | Third-party runtime requests | **zero** — fonts self-hosted and subsetted to 164 glyphs (107 KB) |
 
 ## Structure
@@ -50,12 +56,13 @@ assets/css/style.css        design tokens first, then layers: reset→tokens→b
 assets/css/fonts.css        generated @font-face block
 assets/js/main.js           progressive enhancement only; every feature degrades to a working page
 assets/fonts/               Fraunces · Inter · JetBrains Mono, glyph-subsetted
-assets/img/                 portrait (3 widths × avif/webp), hero poster, favicons, OU logo, OG card
-assets/media/               hero.mp4 + hero.webm, 12 s silent loop, lazily attached
+assets/img/                 portrait (3 widths × avif/webp), hero poster, the 2022 favicon set, OU logo, OG card
+assets/media/               hero.mp4 + hero.webm, 12 s silent loop, lazily attached;
+                            as-it-was-1.mp3 + -2.mp3, the header player's two songs (opt-in)
 assets-src/                 original 2022 media, untouched — provenance, not shipped
-tools/build-assets.py       reproducible image/video pipeline
+tools/build-assets.py       reproducible image/video/audio/favicon pipeline
 tools/build-fonts.py        reproducible font pipeline (+ --check coverage gate)
-tools/qa.py                 67-check verification sweep
+tools/qa.py                 114-check verification sweep
 docs/ai-dlc/                intent → content → design → technical → verification → operations
 ```
 
